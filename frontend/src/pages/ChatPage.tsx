@@ -38,14 +38,7 @@ type ProvenanceData = {
   iterations: number;
 };
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
-
-console.log(
-  "[ChatPage] API_BASE_URL =",
-  API_BASE_URL,
-  "VITE_API_BASE_URL =",
-  import.meta.env.VITE_API_BASE_URL,
-);
+const API_BASE_URL = "http://localhost:8000";
 
 const NODE_ICONS: Record<string, string> = {
   entity_extractor: "\u{1F50D}",

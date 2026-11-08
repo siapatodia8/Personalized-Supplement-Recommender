@@ -8,8 +8,8 @@ Usage (unchanged for callers):
     from src.graph.connections import graph_interface, schema_provider
 
 Both names are lightweight proxies that create and cache the underlying
-objects on first use, which keeps serverless runtimes (e.g. Vercel)
-from performing DNS / network I/O during module import.
+objects on first use, so importing this module never opens a Neo4j
+connection by itself.
 """
 
 import os

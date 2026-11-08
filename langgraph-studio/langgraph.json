@@ -3,8 +3,7 @@
     "anthropic>=0.79.0",
     "langgraph>=1.0.8",
     "neo4j>=6.1.0",
-    "python-dotenv>=1.0.0",
-    "streamlit>=1.54.0"
+    "python-dotenv>=1.0.0"
   ],
   "graphs": {
     "workflow": "./langgraph-studio/langgraph_studio.py:graph"

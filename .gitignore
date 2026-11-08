@@ -37,3 +37,4 @@ drugbank_data/drug_interactions.csv
 # Frontend
 frontend/node_modules/
 
+frontend/dist/

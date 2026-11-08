@@ -2,7 +2,6 @@ from typing import Any, Dict, List, Optional
 import asyncio
 import json
 
-import os
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -60,21 +59,13 @@ class ChatResponse(BaseModel):
 app = FastAPI(title="Supplement Safety Advisor API")
 
 
-# CORS – allow local dev frontends by default; configure for prod later
-frontend_origin = os.getenv("FRONTEND_ORIGIN")
-allowed_origins = [
-    "http://localhost:5173",  # Vite default
-    "http://localhost:3000",  # Create React App / Next dev
-]
-if frontend_origin:
-    allowed_origins.append(frontend_origin)
-
+# CORS – allow local dev frontends
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allowed_origins,
-    # Allow any Vercel preview / production frontend by default.
-    # (If you use a custom domain, set FRONTEND_ORIGIN to that exact URL.)
-    allow_origin_regex=r"^https://.*\.vercel\.app$",
+    allow_origins=[
+        "http://localhost:5173",  # Vite default
+        "http://localhost:3000",  # Create React App / Next dev
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

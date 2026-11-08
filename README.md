@@ -2,8 +2,6 @@
 
 [Project Website](https://kevinkchen1.github.io/project_website/)
 
-[Live App](https://personalized-supplement-recommender.vercel.app/)
-
 An AI-powered system that detects dangerous supplement-medication interactions, identifies nutrient deficiencies, and provides personalized supplement recommendations using a biomedical knowledge graph and multi-agent architecture.
 
 Built with **Neo4j** (knowledge graph), **LangGraph** (multi-agent orchestration), **Claude API** (reasoning), and **React** (web interface).
@@ -178,8 +176,6 @@ npm run dev
 
 Once both are running, open [http://localhost:5173/](http://localhost:5173/) in your browser.
 
-The frontend is also deployed at [personalized-supplement-recommender.vercel.app](https://personalized-supplement-recommender.vercel.app/).
-
 ### LangGraph Studio (Recommended for Development)
 
 LangGraph Studio provides a visual interface for running queries and inspecting the agent workflow step-by-step.
@@ -328,7 +324,6 @@ Reports are saved automatically to `tests/{type}/reports/report_{timestamp}.txt`
 
 ```
 Personalized-Supplement-Recommender/
-├── .devcontainer/                  # Dev container configuration
 ├── .env.example                    # Template for .env setup
 ├── .gitattributes                  # Git LFS tracking for large data files
 ├── .gitignore

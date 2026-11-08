@@ -9,7 +9,6 @@ dependencies = [
     "pandas>=2.3.3",
     "neo4j>=6.1.0",
     "tqdm>=4.67.1",
-    "streamlit>=1.54.0",
     "langgraph>=1.0.8",
     "anthropic>=0.79.0",
     "python-dotenv>=1.0.0",
@@ -20,9 +19,6 @@ dependencies = [
 requires-python = ">=3.12,<3.14"
 readme = "README.md"
 license = {text = "MIT"}
-
-[project.scripts]
-app = "src.api.server:app"
 
 [tool.poetry]
 package-mode = false
@@ -45,10 +41,8 @@ lint = [
 ]
 
 [tool.pdm.scripts]
-app = "streamlit run src/web/app.py"
 api = "python -m src.api.server"
 load-data = "python scripts/load_data.py"
-quickstart = "python scripts/quickstart.py"
 test = "pytest tests/ -v"
 format = {shell = "black . && isort ."}
 lint = {shell = "flake8 . && mypy ."}

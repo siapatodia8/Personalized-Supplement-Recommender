@@ -52,8 +52,10 @@ SCHEMA_STATEMENTS = [
 def apply_schema(driver) -> None:
     """Create every constraint and index.
 
-    `IF NOT EXISTS` makes each statement safe to re-run, so any error raised
-    here is a real problem and is allowed to stop the load.
+    Clearing the database deletes the data but leaves its constraints and
+    indexes in place, so on a rerun they already exist. `IF NOT EXISTS` makes
+    each statement safe to repeat instead of raising an error. That also means
+    any error raised here is a real problem and is allowed to stop the load.
     """
     with driver.session() as session:
         for statement in SCHEMA_STATEMENTS:

@@ -19,7 +19,7 @@ sys.path.insert(0, str(project_root))
 
 from dotenv import load_dotenv  # noqa: E402
 
-# Import connections — initializes GraphInterface and SchemaProvider
+# Import connections — these are lazy proxies; the Neo4j connection and schema are created on first use, not at import
 from src.graph.connections import graph_interface, schema_provider  # noqa: E402, F401
 
 from src.workflow.graph_builder import build_workflow  # noqa: E402

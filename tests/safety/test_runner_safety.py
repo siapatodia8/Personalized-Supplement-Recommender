@@ -63,7 +63,7 @@ class SafetyTestRunner:
         self.workflow = None
 
     def _initialize_workflow(self):
-        """Initialize workflow. Neo4j connection is handled automatically by connections.py on import."""
+        """Initialize workflow. The Neo4j connection is created by connections.py the first time it is used."""
         print("🔧 Initializing workflow...")
         try:
             self.workflow = build_workflow()

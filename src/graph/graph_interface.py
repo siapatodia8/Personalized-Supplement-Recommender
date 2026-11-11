@@ -3,6 +3,8 @@ Neo4j Graph Database Interface
 
 Low-level database infrastructure wrapper.
 Handles connection management, query execution, and schema introspection.
+The single access point the running app uses to read from Neo4j. The loader
+script (scripts/load_data.py) has its own separate connection.
 """
 
 import logging
@@ -191,9 +193,12 @@ class GraphInterface:
         """
         Get source and target node types for each relationship type.
 
-        Queries one sample of each relationship to find what node labels
-        it connects — gives LLMs the directionality they need to reason
-        about valid graph paths without hallucinating connections.
+        Scans every relationship in the graph and keeps each distinct
+        combination of (relationship type, source node label, target node
+        label). A relationship type that connects more than one pair of node
+        types is listed once per pair. This gives LLMs the directionality
+        they need to reason about valid graph paths without hallucinating
+        connections.
 
         Returns:
             List of dicts: [{ rel_type, from_label, to_label }, ...]

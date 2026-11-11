@@ -3,7 +3,7 @@ name = "Personalized-Supplement-Recommender"
 version = "0.1.0"
 description = "Default template for PDM package"
 authors = [
-    {name = "Parna Praveen", email = "parnapraveen912@gmail.com"},
+    {name = "Sia Patodia", email = "patodiasia8@gmail.com"},
 ]
 dependencies = [
     "pandas>=2.3.3",

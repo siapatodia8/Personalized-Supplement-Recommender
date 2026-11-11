@@ -32,9 +32,8 @@ A25,DB01296,identical,Glucosamine
 A26,DB01296,related,Glucosamine salt form
 A31,DB00125,identical,Amino acid arginine
 A46,DB00118,identical,SAMe
-A14,DB01156,identical,DHA omega-3 fatty acid
+A14,DB03756,identical,DHA omega-3 fatty acid
 A15,DB00159,identical,EPA omega-3 fatty acid
-A16,DB04870,identical,DPA omega-3 fatty acid
-A17,DB03539,identical,ALA omega-3 fatty acid
-A12,DB03522,identical,GLA omega-6 fatty acid
-A13,DB04467,identical,LA omega-6 fatty acid
+A17,DB00132,identical,ALA omega-3 fatty acid
+A12,DB13854,identical,GLA omega-6 fatty acid
+A13,DB14104,identical,LA omega-6 fatty acid

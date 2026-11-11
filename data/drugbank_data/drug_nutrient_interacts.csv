@@ -22,12 +22,10 @@ DB00887,Bumetanide,Diuretics,Magnesium,N009,depletes
 DB00887,Bumetanide,Diuretics,Calcium,N006,depletes
 DB00310,Chlorthalidone,Diuretics,Potassium,N010,depletes
 DB00310,Chlorthalidone,Diuretics,Magnesium,N009,depletes
-DB00310,Chlorthalidone,Diuretics,Sodium,NEW,depletes
 DB00695,Furosemide,Diuretics,Potassium,N010,depletes
 DB00695,Furosemide,Diuretics,Magnesium,N009,depletes
 DB00695,Furosemide,Diuretics,Calcium,N006,depletes
 DB00695,Furosemide,Diuretics,Thiamine(Vitamin B1),N017,depletes
-DB00695,Furosemide,Diuretics,Sodium,NEW,depletes
 DB00999,Hydrochlorothiazide,Diuretics,Potassium,N010,depletes
 DB00999,Hydrochlorothiazide,Diuretics,Magnesium,N009,depletes
 DB00999,Hydrochlorothiazide,Diuretics,Zinc,N007,depletes
@@ -159,7 +157,7 @@ DB00930,Colesevelam,Cholesterol_Other,Vitamin D,N005,depletes
 DB00930,Colesevelam,Cholesterol_Other,Vitamin K,N008,depletes
 DB00930,Colesevelam,Cholesterol_Other,Vitamin A,N022,depletes
 DB00930,Colesevelam,Cholesterol_Other,Vitamin E,N023,depletes
-DB00375,Colestipol,Cholesterol_Other,Vitamin A,NEW,depletes
+DB00375,Colestipol,Cholesterol_Other,Vitamin A,N022,depletes
 DB00375,Colestipol,Cholesterol_Other,Vitamin D,N005,depletes
 DB00375,Colestipol,Cholesterol_Other,Vitamin K,N008,depletes
 DB00375,Colestipol,Cholesterol_Other,Vitamin E,N023,depletes

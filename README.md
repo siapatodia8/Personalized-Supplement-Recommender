@@ -27,7 +27,7 @@ Millions of people take dietary supplements without knowing they can dangerously
 - **Deficiency Analysis** — Identifying nutrient gaps from diet, supplements, and medications with critical overlap detection
 - **Personalized Recommendations** — Suggesting safe supplements for conditions/symptoms, filtered against your medication profile
 
-The system uses multi-hop reasoning over a Neo4j knowledge graph (329,820 nodes, 3.4M+ relationships) built from **DrugBank**, **Mayo Clinic** and **Manually Curated Nutrition** data, with a supervisor agent dynamically routing queries to specialist tools.
+The system uses multi-hop reasoning over a Neo4j knowledge graph (329,849 nodes, 3.4M+ relationships) built from **DrugBank**, **Mayo Clinic** and **Manually Curated Nutrition** data, with a supervisor agent dynamically routing queries to specialist tools.
 
 For detailed documentation, see below:
 
@@ -152,7 +152,7 @@ Before using the system, populate Neo4j with the biomedical data:
 pdm run load-data
 ```
 
-This loads DrugBank and Mayo Clinic data (22 CSV files) into the knowledge graph, creating 329,820 nodes and 3.4M+ relationships.
+This loads DrugBank and Mayo Clinic data (28 CSV files) into the knowledge graph, creating 329,849 nodes and 3.4M+ relationships.
 
 ---
 
@@ -338,7 +338,12 @@ Personalized-Supplement-Recommender/
 ├── frontend/                       # React/Vite single-page app; communicates with src/api/server.py
 ├── langgraph-studio/               # LangGraph Studio configuration and entry point 
 ├── scripts/
-│   └── load_data.py                # Knowledge graph data loader in Neo4j
+│   ├── load_data.py                # Entry point: wipes Neo4j and reloads the knowledge graph
+│   ├── kg_loader/
+│   │   ├── catalog.py              # What to load: one entry per CSV file, in load order
+│   │   ├── schema.py               # Constraints and indexes
+│   │   └── loader.py               # How to load: query builders, batching, count verification
+│   └── tests/                      # Unit tests for the loader (pytest scripts/tests)
 ├── tests/                          # Per-agent test runners with CSV golden datasets and report outputs
 └── src/
     ├── agents/                     

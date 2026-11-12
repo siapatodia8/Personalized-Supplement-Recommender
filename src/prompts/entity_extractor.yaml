@@ -12,6 +12,17 @@ extraction: |
 
   Rules:
   - Extract exactly what the user said, do not correct spelling yet
+  - Only extract specifically named items. Do not extract generic references or
+    classes of drugs or supplements (a type rather than a specific name), such as
+    "my supplements", "my current supplements", "my medications", "vitamins",
+    "supplements for my joints", "an antidepressant", "a statin", "a blood thinner"
+    or "pills for my blood pressure" (from that last one, extract only the condition)
+  - Do not extract items the user says they stopped taking or no longer take.
+    Still extract anything the user asks about or is considering taking
+  - conditions are what the patient has or wants to improve, not what the question
+    asks about: do not extract "nutrient deficiencies", "deficiency risks",
+    "missing nutrients", "interactions" or "risks" as conditions
+  - For dietary_restrictions, use the diet's name only (e.g. "vegan", "keto"), not "vegan diet"
   - If a category has nothing, return an empty list []
   - Return ONLY valid JSON, no markdown, no explanation
 

@@ -54,7 +54,7 @@ def _extract_from_question(question: str, client: Anthropic) -> Dict[str, List[s
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=500,
             temperature=0,
             messages=[{"role": "user", "content": prompt}]

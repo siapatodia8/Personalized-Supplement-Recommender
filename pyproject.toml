@@ -25,9 +25,6 @@ package-mode = false
 
 [tool.pdm]
 [tool.pdm.dev-dependencies]
-cli = [
-    "langgraph-cli[inmem]>=0.4.12",
-]
 test = [
     "pytest>=7.4.3",
     "pytest-cov>=4.1.0",
@@ -70,4 +67,8 @@ exclude = [
     ".pdm-build/",
     "build/",
     "dist/",
+]
+[dependency-groups]
+cli = [
+    "langgraph-cli[inmem]>=0.4.12",
 ]

@@ -378,7 +378,7 @@ def synthesis_agent(state: Dict[str, Any]) -> Dict[str, Any]:
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=1500,
             temperature=0,
             messages=[{"role": "user", "content": prompt}],

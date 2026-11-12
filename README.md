@@ -239,7 +239,7 @@ pdm run python -c "
 from dotenv import load_dotenv; import os; load_dotenv()
 from anthropic import Anthropic
 client = Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-r = client.messages.create(model='claude-sonnet-4-20250514', max_tokens=50, messages=[{'role':'user','content':'Say OK'}])
+r = client.messages.create(model='claude-sonnet-4-5', max_tokens=50, messages=[{'role':'user','content':'Say OK'}])
 print(f'✅ Claude API working: {r.content[0].text}')
 "
 ```

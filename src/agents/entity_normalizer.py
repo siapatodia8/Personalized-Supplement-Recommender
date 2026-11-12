@@ -56,7 +56,7 @@ def _generate_normalization_query(
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=300,
             temperature=0,
             messages=[{"role": "user", "content": prompt}]
@@ -129,7 +129,7 @@ def _normalize_entity(
 
     try:
         response = client.messages.create(
-            model="claude-sonnet-4-20250514",
+            model="claude-sonnet-4-5",
             max_tokens=300,
             temperature=0,
             messages=[{"role": "user", "content": fallback_prompt}]

@@ -17,6 +17,7 @@ Type: Hybrid
 import json
 import logging
 import os
+import re
 from typing import Any, Dict, List
 
 from anthropic import Anthropic
@@ -59,7 +60,11 @@ def _extract_from_question(question: str, client: Anthropic) -> Dict[str, List[s
             temperature=0,
             messages=[{"role": "user", "content": prompt}]
         )
-        return json.loads(response.content[0].text.strip())
+        raw = response.content[0].text.strip()
+        # Strip markdown fences if present (newer models wrap JSON in ```json ... ```)
+        raw = re.sub(r'^```(?:json)?\s*', '', raw)
+        raw = re.sub(r'\s*```$', '', raw)
+        return json.loads(raw)
     except Exception as e:
         logger.error(f"LLM extraction failed: {e}")
         return {"medications": [], "supplements": [], "conditions": [], "dietary_restrictions": []}

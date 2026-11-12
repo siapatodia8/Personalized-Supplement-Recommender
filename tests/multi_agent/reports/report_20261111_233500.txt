@@ -1,0 +1,854 @@
+================================================================================
+TEST REPORT — Multi-Agent Tests (Human Review)
+================================================================================
+Dataset: golden_dataset_multi_agent
+Total Tests: 13
+
+================================================================================
+TEST RESULTS
+================================================================================
+
+Test 1
+------------------------------------------------------------
+  Question:  I take Warfarin and follow a vegan diet. Is my Fish Oil safe and am I missing nutrients?
+  Type:      multi_agent
+  Desc:      SAFETY_PLUS_DEF — Fish Oil↔Warfarin + 8 vegan deficiencies + Fish Oil→Vit E. Two-part question expects both specialists.
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          Fish Oil
+    Conditions:           None
+    Dietary Restrictions: Vegan
+
+  NORMALIZED ENTITIES:
+    Medications:          ['Warfarin']
+    Supplements:          ['Fish oil']
+    Conditions:           None
+    Dietary Restrictions: ['Vegan', 'vegan diet']
+    Candidate Supplements: None
+
+  PIPELINE METADATA:
+    Iterations:      3
+    Specialists ran: Safety, Deficiency
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: ['Warfarin'], supplements: ['Fish Oil'], conditions: [], dietary restrictions: ['Vegan', 'vegan diet']
+    2. Normalized — medications: ['Warfarin'], supplements: ['Fish oil'], conditions: [], dietary restrictions: ['Vegan', 'vegan diet']
+    3. Supervisor (iteration 1): Patient is on Warfarin anticoagulation, takes Fish Oil supplement, follows a vegan diet, and is asking whether Fish Oil is safe with their medication and whether they have nutrient deficiencies from their diet. → check_safety — The user explicitly asks if Fish Oil is safe with Warfarin, so we must first check for drug-supplement interactions before addressing the nutrient deficiency question.
+    4. Safety check: Found 5 interaction(s) across 3 pathway(s) between Fish oil and Warfarin (Drug-Drug Interaction via Equivalent: 2, Reverse Drug-Drug Interaction via Equivalent: 2, Similar Effect Category: 1)
+    5. Supervisor (iteration 2): Patient takes Warfarin and follows a vegan diet while supplementing with Fish Oil, asking whether the supplement is safe and if they have nutrient deficiencies from their diet. → check_deficiency — The safety check has been completed showing interactions between Fish Oil and Warfarin, but the second part of the question about missing nutrients due to the vegan diet has not yet been addressed by any specialist.
+    6. Deficiency check: Found 10 nutrient(s) at risk (8 from diet, 1 from medications, 1 from supplements)
+    7. Supervisor (iteration 3): Patient on Warfarin following a vegan diet, currently taking Fish Oil, asking whether the supplement is safe and if they have nutrient deficiencies. → synthesize — Both relevant specialists (check_safety and check_deficiency) have already run and provided comprehensive results addressing both parts of the user's question about Fish Oil safety and nutrient gaps.
+    8. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS:
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [MODERATE] Fish oil ↔ Warfarin | Pathway: Similar Effect Category
+      Description: Supplement has similar effect to same category as medication drug
+
+  DEFICIENCY FINDINGS:
+    Nutrients at risk: Calcium, Iodine, Iron, Omega-3 (EPA/DHA), Protein, Vitamin B12, Vitamin D, Zinc, Vitamin K, Vitamin E
+
+  RECOMMENDATION CANDIDATES: None (status: did not run)
+
+  FINAL ANSWER:
+    **No, your Fish Oil is not safe with Warfarin — it increases your bleeding risk. Yes, you're missing several nutrients on a vegan diet, but your Fish Oil does cover omega-3s.**
+    
+    Your **Fish Oil** contains EPA and DHA, which are omega-3 fatty acids that thin the blood similar to how **Warfarin** works. When you take them together, you're essentially doubling up on blood-thinning effects, which significantly raises your risk of bleeding or bruising. This is a serious interaction that your doctor needs to know about.
+    
+    On the nutrition side, your vegan diet puts you at risk for deficiencies in **Vitamin B12**, **Vitamin D**, **calcium**, **iron**, **iodine**, **zinc**, and **protein**. The good news is your Fish Oil is covering your omega-3 needs (EPA/DHA), which vegans typically lack. However, your Warfarin depletes **Vitamin K**, and your Fish Oil may deplete **Vitamin E**, so those are additional concerns.
+    
+    > **How we found this:** Fish oil → contains → Eicosapentaenoic acid (EPA) → equivalent to → Icosapent → interacts with → Warfarin
+    
+    > **How we found this:** Fish oil → contains → Docosahexaenoic acid (DHA) → equivalent to → Doconexent → interacts with → Warfarin
+    
+    ---
+    
+    We didn't assess specific supplement recommendations to address your deficiencies — only identified the safety issue and nutritional gaps.
+    
+    Talk to your doctor before your next dose of Fish Oil, and discuss supplementation strategies for the nutrients you're missing on your vegan diet.
+
+
+Test 2
+------------------------------------------------------------
+  Question:  I have diabetes and take Metformin. What supplements should I take?
+  Type:      multi_agent
+  Desc:      REC_THEN_SAFETY — Diabetes recs include CoQ10 which interacts with Metformin. Tests recommend→safety pipeline.
+
+  PATIENT PROFILE:
+    Medications:          Metformin
+    Supplements:          None
+    Conditions:           Diabetes
+    Dietary Restrictions: None
+
+  NORMALIZED ENTITIES:
+    Medications:          ['Metformin']
+    Supplements:          None
+    Conditions:           ['Diabetes']
+    Dietary Restrictions: None
+    Candidate Supplements: ['Coenzyme Q10', 'Flaxseed and flaxseed oil', 'Milk thistle']
+
+  PIPELINE METADATA:
+    Iterations:      4
+    Specialists ran: Safety, Deficiency, Recommendation
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: ['Metformin'], supplements: [], conditions: ['Diabetes'], dietary restrictions: []
+    2. Normalized — medications: ['Metformin'], supplements: [], conditions: ['Diabetes'], dietary restrictions: []
+    3. Supervisor (iteration 1): Patient has diabetes, takes Metformin, and is asking what supplements they should take for their condition. → check_deficiency — Before recommending new supplements, we should first check if Metformin or diabetes itself causes any nutrient deficiencies that need to be addressed.
+    4. Deficiency check: Found 1 nutrient(s) at risk (1 from medications)
+    5. Supervisor (iteration 2): Patient has diabetes, takes Metformin which depletes B12, and is asking what supplements they should take. → get_recommendations — We've identified B12 deficiency risk from Metformin, but need to check for supplement recommendations that address both the diabetes condition and the B12 depletion before we can provide a complete answer.
+    6. Recommendation check: Found 3 supplement candidate(s) for Diabetes — safety check pending
+    7. Supervisor (iteration 3): Patient with diabetes on Metformin is asking what supplements to take; deficiency check found B12 depletion risk and recommendation check found 3 diabetes supplement candidates that need safety verification. → check_safety — The recommended supplements (Coenzyme Q10, Flaxseed oil, Milk thistle) must be checked for interactions with Metformin before providing final recommendations to the patient.
+    8. Safety check: Found 4 interaction(s) across 2 pathway(s) between Coenzyme Q10, Flaxseed and flaxseed oil, Milk thistle and Metformin (Drug-Drug Interaction via Equivalent: 2, Reverse Drug-Drug Interaction via Equivalent: 2)
+    9. Supervisor (iteration 4): Patient with diabetes on Metformin asking what supplements to take; specialists have identified B12 deficiency risk from Metformin, recommended CoQ10/Flaxseed/Milk thistle for diabetes, and found HIGH severity interactions between CoQ10 and Metformin. → synthesize — All three relevant specialists have already run and provided complete information about deficiency risks, supplement recommendations for diabetes, and safety interactions with Metformin, so we have sufficient data to provide a comprehensive answer.
+    10. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS:
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+
+  DEFICIENCY FINDINGS:
+    Nutrients at risk: Vitamin B12
+
+  RECOMMENDATION CANDIDATES:
+    Coenzyme Q10 — safety_rating: Generally safe | treats: Diabetes
+    Flaxseed and flaxseed oil — safety_rating: Generally safe | treats: Diabetes
+    Milk thistle — safety_rating: Generally safe | treats: Diabetes
+
+  FINAL ANSWER:
+    **You should take Vitamin B12, and you can consider flaxseed oil or milk thistle. Avoid Coenzyme Q10.**
+    
+    Your **Metformin** depletes **Vitamin B12** over time, which can lead to nerve problems and anemia if left unchecked. This is a well-known effect of long-term Metformin use, so B12 supplementation makes sense for you.
+    
+    **Coenzyme Q10** has a significant interaction problem with your **Metformin**. CoQ10 contains ubiquinone and ubiquinol, which are equivalent to a drug called ubidecarenone that interacts with Metformin. This creates a drug-drug interaction that can interfere with how your Metformin works to control your blood sugar.
+    
+    > **How we found this:** Coenzyme Q10 → contains → Ubiquinone → equivalent to → Ubidecarenone → interacts with → Metformin
+    
+    **Flaxseed oil** and **milk thistle** are both generally safe for people with diabetes and don't interact with your Metformin, so either could be reasonable additions if you're interested in them for other health reasons.
+    
+    ---
+    
+    Talk to your doctor about starting B12 supplementation and discuss whether flaxseed oil or milk thistle would be helpful for your specific situation.
+
+
+Test 3
+------------------------------------------------------------
+  Question:  I'm vegetarian with constipation and take Warfarin.
+  Type:      multi_agent
+  Desc:      ALL_THREE — Vegetarian(4 def) + Constipation(2 recs) + Aloe↔Warfarin. Every specialist has known data.
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          None
+    Conditions:           Constipation
+    Dietary Restrictions: Vegetarian
+
+  NORMALIZED ENTITIES:
+    Medications:          ['Warfarin']
+    Supplements:          None
+    Conditions:           ['Constipation']
+    Dietary Restrictions: ['Vegetarian']
+    Candidate Supplements: ['Aloe', 'Flaxseed and flaxseed oil']
+
+  PIPELINE METADATA:
+    Iterations:      4
+    Specialists ran: Safety, Deficiency, Recommendation
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: ['Warfarin'], supplements: [], conditions: ['Constipation'], dietary restrictions: ['Vegetarian']
+    2. Normalized — medications: ['Warfarin'], supplements: [], conditions: ['Constipation'], dietary restrictions: ['Vegetarian']
+    3. Supervisor (iteration 1): Vegetarian patient on Warfarin with constipation is presenting their clinical situation, likely seeking guidance on safe supplement options given their anticoagulant medication and dietary restrictions. → check_deficiency — Should first identify potential nutrient deficiencies from vegetarian diet and constipation before recommending supplements, especially given the critical Warfarin interaction concerns.
+    4. Deficiency check: Found 5 nutrient(s) at risk (4 from diet, 1 from medications)
+    5. Supervisor (iteration 2): Vegetarian patient on Warfarin with constipation is presenting their clinical situation, likely seeking guidance on supplement safety and recommendations for their conditions. → get_recommendations — The user has presented their full clinical picture including constipation as a condition that needs addressing, so we should check for supplement recommendations to treat constipation while considering their vegetarian diet and Warfarin use before synthesizing a complete answer.
+    6. Recommendation check: Found 2 supplement candidate(s) for Constipation — safety check pending
+    7. Supervisor (iteration 3): Vegetarian patient on Warfarin with constipation who has potential nutrient deficiencies and two supplement candidates (Aloe, Flaxseed) identified for constipation treatment that need safety verification against Warfarin. → check_safety — The recommended supplements (Aloe and Flaxseed) must be checked for interactions with Warfarin before providing final recommendations, as Warfarin has critical drug-supplement interaction risks.
+    8. Safety check: Found 1 interaction(s) across 1 pathway(s) between Aloe, Flaxseed and flaxseed oil and Warfarin (Direct Interaction: 1)
+    9. Supervisor (iteration 4): Vegetarian patient on Warfarin with constipation is seeking guidance on supplement safety and potential deficiencies; all three specialist checks have been completed showing constipation supplement candidates (Aloe, Flaxseed), vegetarian-related deficiencies, and a HIGH severity interaction between Aloe and Warfarin. → synthesize — All relevant specialists have already run and returned comprehensive results covering safety interactions, nutritional deficiencies, and supplement recommendations, providing sufficient information to synthesize a complete answer.
+    10. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS:
+    [HIGH] Aloe ↔ Warfarin | Pathway: Direct Interaction
+      Description: Direct supplement-medication interaction
+
+  DEFICIENCY FINDINGS:
+    Nutrients at risk: Iron, Omega-3 (EPA/DHA), Vitamin B12, Zinc, Vitamin K
+
+  RECOMMENDATION CANDIDATES:
+    Aloe — safety_rating: Generally safe | treats: Constipation
+    Flaxseed and flaxseed oil — safety_rating: Generally safe | treats: Constipation
+
+  FINAL ANSWER:
+    **You're not currently taking any supplements, so there are no interactions to worry about right now. However, as a vegetarian on Warfarin with constipation, you need to know about some important nutrient gaps and which constipation remedies are safe for you.**
+    
+    Your vegetarian diet puts you at risk for deficiencies in **Iron**, **Omega-3 (EPA/DHA)**, **Vitamin B12**, and **Zinc**. On top of that, your **Warfarin** works by blocking Vitamin K, which means you're also at risk for low Vitamin K levels. These are worth discussing with your doctor to see if supplementation makes sense for you.
+    
+    For your constipation, **Flaxseed and flaxseed oil** are generally safe options that won't interfere with your Warfarin. However, avoid **Aloe** — even though it's commonly used for constipation, it directly interacts with Warfarin and can affect how well your medication works to prevent blood clots.
+    
+    > **How we found this:** Aloe → [Direct Interaction] → directly interacts with -> Warfarin → Warfarin
+    
+    ---
+    
+    Talk to your doctor about addressing these nutrient gaps and finding the right constipation remedy that's safe with your Warfarin.
+
+
+Test 4
+------------------------------------------------------------
+  Question:  I follow a keto diet and have acne. What should I take?
+  Type:      multi_agent
+  Desc:      DEF_PLUS_REC — Keto(4 def) + Acne(3 recs). No medications so safety simpler.
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Acne
+    Dietary Restrictions: Keto
+
+  NORMALIZED ENTITIES:
+    Medications:          None
+    Supplements:          None
+    Conditions:           ['Acne']
+    Dietary Restrictions: ['Keto']
+    Candidate Supplements: ['Aloe', 'Tea tree oil', 'Vitamin A']
+
+  PIPELINE METADATA:
+    Iterations:      3
+    Specialists ran: Deficiency, Recommendation
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: [], supplements: [], conditions: ['Acne'], dietary restrictions: ['Keto']
+    2. Normalized — medications: [], supplements: [], conditions: ['Acne'], dietary restrictions: ['Keto']
+    3. Supervisor (iteration 1): Patient follows a keto diet, has acne, takes no medications or supplements, and is asking what supplements to take for their condition. → get_recommendations — The user is directly asking for supplement recommendations to address their acne, so we should first identify candidate supplements that treat acne before checking for deficiencies or interactions.
+    4. Recommendation check: Found 3 supplement candidate(s) for Acne — safety check pending
+    5. Supervisor (iteration 2): Patient follows a keto diet, has acne, takes no medications or supplements, and is asking what supplements to take for their condition. → check_deficiency — The keto dietary restriction may cause nutrient deficiencies that should be identified before finalizing supplement recommendations, and this specialist has not yet been run.
+    6. Deficiency check: Found 4 nutrient(s) at risk (4 from diet)
+    7. Supervisor (iteration 3): Patient follows a keto diet and has acne, asking what supplements to take; deficiency check shows 4 at-risk nutrients from keto diet, and recommendation check found 3 supplement candidates for acne treatment. → synthesize — All relevant specialists have already run (deficiency identified keto-related nutrient gaps, recommendations identified acne treatment options), and since the patient is not currently taking any medications or supplements, there are no interactions to check with check_safety, so we have sufficient information to provide a comprehensive answer.
+    8. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS: None (status: did not run)
+
+  DEFICIENCY FINDINGS:
+    Nutrients at risk: Fiber, Magnesium, Potassium, Vitamin C
+
+  RECOMMENDATION CANDIDATES:
+    Aloe — safety_rating: Generally safe | treats: Acne
+    Tea tree oil — safety_rating: Generally safe | treats: Acne
+    Vitamin A — safety_rating: Use with caution | treats: Acne
+
+  FINAL ANSWER:
+    **For your acne while on keto, start with topical aloe or tea tree oil — both are generally safe and effective. I'd also address the nutritional gaps your keto diet is creating: you need fiber, magnesium, potassium, and vitamin C.**
+    
+    Let me explain the acne options first. **Aloe** and **tea tree oil** are both generally safe topical treatments that can help with acne. These work on the skin surface to reduce inflammation and bacteria without systemic effects. **Vitamin A** can also help acne, but use it with caution — high doses can cause toxicity, and you need to be careful about the amount.
+    
+    Now, the bigger issue: your keto diet is putting you at risk for several deficiencies. You're likely not getting enough **fiber** (which affects digestion and gut health), **magnesium** (critical for muscle and nerve function), **potassium** (essential for heart rhythm and blood pressure), and **vitamin C** (needed for immune function and skin health). These aren't optional — keto restricts many fruits, vegetables, and whole grains that normally provide these nutrients.
+    
+    I'd prioritize supplementing those four deficiencies alongside treating your acne. The vitamin C deficiency is particularly relevant since healthy skin depends on adequate vitamin C for collagen production and healing.
+    
+    ---
+    
+    I wasn't able to assess supplement-medication interactions since you're not taking any medications currently.
+    
+    Talk to your healthcare provider about specific doses for these supplements, especially if you decide to try vitamin A for your acne.
+
+
+Test 5
+------------------------------------------------------------
+  Question:  I take Carbamazepine and follow a vegan diet. Any concerns?
+  Type:      multi_agent
+  Desc:      EARLY_STOP_CHECK — Vegan diet + Carbamazepine. Expect both safety and deficiency to run. If supervisor only runs deficiency and skips safety (or vice versa) that is a partial result.
+
+  PATIENT PROFILE:
+    Medications:          Carbamazepine
+    Supplements:          None
+    Conditions:           None
+    Dietary Restrictions: Vegan
+
+  NORMALIZED ENTITIES:
+    Medications:          ['Carbamazepine']
+    Supplements:          None
+    Conditions:           None
+    Dietary Restrictions: ['Vegan', 'vegan diet']
+    Candidate Supplements: None
+
+  PIPELINE METADATA:
+    Iterations:      2
+    Specialists ran: Deficiency
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: ['Carbamazepine'], supplements: [], conditions: [], dietary restrictions: ['Vegan', 'vegan diet']
+    2. Normalized — medications: ['Carbamazepine'], supplements: [], conditions: [], dietary restrictions: ['Vegan', 'vegan diet']
+    3. Supervisor (iteration 1): Patient takes Carbamazepine medication and follows a vegan diet, asking if there are any concerns related to this combination. → check_deficiency — The user is asking about concerns, which could include both nutrient deficiencies from the vegan diet interacting with Carbamazepine and potential supplement-drug interactions, so we should first check for deficiencies given the dietary restriction and medication use.
+    4. Deficiency check: Found 11 nutrient(s) at risk (8 from diet, 6 from medications) — 3 critical overlap(s)
+    5. Supervisor (iteration 2): Patient on Carbamazepine following a vegan diet is asking if there are any concerns about this combination. → synthesize — The deficiency check has already identified 11 nutrient deficiencies with 3 critical overlaps between the vegan diet and Carbamazepine, which directly answers the user's question about concerns; no current supplements exist to check for safety interactions, and the user hasn't asked for recommendations.
+    6. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS: None (status: did not run)
+
+  DEFICIENCY FINDINGS:
+    Nutrients at risk: Calcium, Iodine, Iron, Omega-3 (EPA/DHA), Protein, Vitamin B12, Vitamin D, Zinc, Folate (folic acid), Vitamin B6 (Pyridoxine), Biotin (Vitamin B7)
+    Critical overlaps:
+      🚨 Calcium: Calcium is affected by 2 sources: Vegan, Carbamazepine
+      🚨 Vitamin B12: Vitamin B12 is affected by 2 sources: Vegan, Carbamazepine
+      🚨 Vitamin D: Vitamin D is affected by 2 sources: Vegan, Carbamazepine
+
+  RECOMMENDATION CANDIDATES: None (status: did not run)
+
+  FINAL ANSWER:
+    **Yes, there are significant concerns. Your vegan diet combined with Carbamazepine puts you at high risk for multiple nutrient deficiencies—three of them from compounded sources.**
+    
+    Let me break down what's happening. **Carbamazepine** depletes several B vitamins from your body, including **folate**, **vitamin B6**, and **biotin**. It also depletes **vitamin B12** and **vitamin D**, and it interferes with your body's ability to absorb **calcium**. These are direct effects of the medication on how your body processes and stores these nutrients.
+    
+    Your **vegan diet** independently puts you at risk for **calcium**, **iodine**, **iron**, **omega-3 (EPA/DHA)**, **protein**, **vitamin B12**, **vitamin D**, and **zinc** deficiencies, since these nutrients are either absent or less bioavailable in plant-based foods.
+    
+    Here's the critical part: **calcium**, **vitamin B12**, and **vitamin D** are being hit from both sides. Your vegan diet already makes it harder to get adequate amounts, and your Carbamazepine is simultaneously depleting or blocking absorption of these same nutrients. This compounded risk means you're especially vulnerable to deficiency in these three.
+    
+    ---
+    
+    I didn't assess supplement interactions since you're not currently taking any supplements, and I haven't provided specific recommendations here. Talk to your doctor about testing your levels and developing a supplementation plan that addresses these deficiencies safely alongside your Carbamazepine.
+
+
+Test 6
+------------------------------------------------------------
+  Question:  What supplements should I take? I have no health issues.
+  Type:      multi_agent
+  Desc:      EDGE — minimal input. Only dietary restriction. Tests near-empty profile handling.
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           None
+    Dietary Restrictions: Vegan
+
+  NORMALIZED ENTITIES:
+    Medications:          None
+    Supplements:          None
+    Conditions:           None
+    Dietary Restrictions: ['Vegan']
+    Candidate Supplements: None
+
+  PIPELINE METADATA:
+    Iterations:      2
+    Specialists ran: Deficiency
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: [], supplements: [], conditions: [], dietary restrictions: ['Vegan']
+    2. Normalized — medications: [], supplements: [], conditions: [], dietary restrictions: ['Vegan']
+    3. Supervisor (iteration 1): A vegan patient with no health conditions, medications, or current supplements is asking what supplements they should take. → check_deficiency — Since the patient follows a vegan diet which commonly has specific nutrient gaps (B12, iron, omega-3, etc.), we should first check for potential deficiencies before making any supplement recommendations.
+    4. Deficiency check: Found 8 nutrient(s) at risk (8 from diet)
+    5. Supervisor (iteration 2): A vegan patient with no health conditions or current medications/supplements is asking what supplements they should take, and deficiency analysis has identified 8 nutrients at risk due to their vegan diet. → synthesize — The deficiency check has already identified the relevant nutrient gaps from the vegan diet, there are no medications or supplements to check for interactions, and no specific health conditions requiring treatment recommendations, so we have sufficient information to provide supplement guidance based on the identified deficiencies.
+    6. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS: None (status: did not run)
+
+  DEFICIENCY FINDINGS:
+    Nutrients at risk: Calcium, Iodine, Iron, Omega-3 (EPA/DHA), Protein, Vitamin B12, Vitamin D, Zinc
+
+  RECOMMENDATION CANDIDATES: None (status: did not run)
+
+  FINAL ANSWER:
+    **As a vegan with no health issues, you should take vitamin B12 — it's essential and you can't get it from plant foods. You're also at risk for deficiencies in vitamin D, omega-3s (EPA/DHA), iron, calcium, iodine, zinc, and protein.**
+    
+    **Vitamin B12** is non-negotiable for vegans. Your body needs it to make red blood cells and maintain your nervous system, and it only comes from animal products. Without supplementation, you will become deficient — it's just a matter of time.
+    
+    **Vitamin D** is another priority since most dietary sources are animal-based. Your body makes it from sunlight, but depending on where you live and how much time you spend outdoors, that may not be enough. **Omega-3s (EPA/DHA)** are found mainly in fish, so consider an algae-based supplement — these are the forms your brain and heart actually use, unlike the ALA found in flaxseeds and walnuts.
+    
+    For **iron**, **calcium**, **zinc**, and **iodine**, you can often get enough from well-planned vegan foods (legumes, fortified plant milks, nuts, seeds, seaweed), but many vegans fall short. Track your intake for a week or two — if you're consistently low, supplement those too. **Protein** is usually manageable through beans, lentils, tofu, and whole grains, but be intentional about eating enough throughout the day.
+    
+    ---
+    
+    I wasn't able to check for interactions with medications since you're not taking any, and I haven't made specific supplement recommendations beyond what you're at risk for. Talk to your doctor about getting baseline blood work to see where you actually stand, then you can supplement strategically rather than guessing.
+
+
+Test 7
+------------------------------------------------------------
+  Question:  I have heart disease and depression. I take Warfarin.
+  Type:      multi_agent
+  Desc:      REC_SAFETY_MULTI — 2 conditions generating many candidates all safety-checked against Warfarin.
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          None
+    Conditions:           Heart Disease, Depression
+    Dietary Restrictions: None
+
+  NORMALIZED ENTITIES:
+    Medications:          ['Warfarin']
+    Supplements:          None
+    Conditions:           ['Heart Disease', 'Depression']
+    Dietary Restrictions: None
+    Candidate Supplements: ['Fish oil', 'Flaxseed and flaxseed oil', 'Folate (folic acid)', 'SAMe', 'Vitamin A', "St. John's wort", 'DHEA']
+
+  PIPELINE METADATA:
+    Iterations:      3
+    Specialists ran: Safety, Recommendation
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: ['Warfarin'], supplements: [], conditions: ['Heart Disease', 'Depression'], dietary restrictions: []
+    2. Normalized — medications: ['Warfarin'], supplements: [], conditions: ['Heart Disease', 'Depression'], dietary restrictions: []
+    3. Supervisor (iteration 1): Patient with heart disease and depression taking Warfarin is presenting their clinical situation without asking a specific question, likely seeking general guidance on safe supplementation options. → get_recommendations — Since the user is presenting their conditions and medication without a specific question, the most helpful response would be to identify potential supplement candidates that could help with their heart disease and depression while being safe with Warfarin, which can then be safety-checked.
+    4. Recommendation check: Found 7 supplement candidate(s) for Heart Disease, Depression — safety check pending
+    5. Supervisor (iteration 2): Patient with heart disease and depression taking Warfarin is asking about their condition; recommendations have been found but need safety checking against Warfarin before providing final answer. → check_safety — The recommended supplements must be checked for interactions with Warfarin, which is a critical anticoagulant with many known supplement interactions, before we can safely synthesize recommendations.
+    6. Safety check: Found 12 interaction(s) across 4 pathway(s) between Fish oil, Flaxseed and flaxseed oil, Folate (folic acid), SAMe, Vitamin A, St. John's wort, DHEA and Warfarin (Drug-Drug Interaction via Equivalent: 4, Reverse Drug-Drug Interaction via Equivalent: 4, Similar Effect Category: 2, Direct Interaction: 2)
+    7. Supervisor (iteration 3): Patient with heart disease and depression taking Warfarin is asking about their condition, and we have already identified 7 potential supplement candidates with multiple high-severity interactions with Warfarin detected. → synthesize — All relevant specialists have run (safety check and recommendations), providing complete information about supplement candidates for the patient's conditions and their interactions with Warfarin, so we can now synthesize a comprehensive answer.
+    8. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS:
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [MODERATE] Fish oil ↔ Warfarin | Pathway: Similar Effect Category
+      Description: Supplement has similar effect to same category as medication drug
+    [HIGH] Folate (folic acid) ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Folate (folic acid) ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [HIGH] Vitamin A ↔ Warfarin | Pathway: Direct Interaction
+      Description: Direct supplement-medication interaction
+    [HIGH] St. John's wort ↔ Warfarin | Pathway: Direct Interaction
+      Description: Direct supplement-medication interaction
+    [MODERATE] St. John's wort ↔ Warfarin | Pathway: Similar Effect Category
+      Description: Supplement has similar effect to same category as medication drug
+    [HIGH] DHEA ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] DHEA ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+
+  DEFICIENCY FINDINGS: None (status: did not run)
+
+  RECOMMENDATION CANDIDATES:
+    Fish oil — safety_rating: Generally safe | treats: Heart disease
+    Flaxseed and flaxseed oil — safety_rating: Generally safe | treats: Heart disease
+    Folate (folic acid) — safety_rating: Generally safe | treats: Depression
+    SAMe — safety_rating: Generally safe | treats: Depression
+    Vitamin A — safety_rating: Use with caution | treats: Heart disease
+    St. John's wort — safety_rating: Use with caution | treats: Depression
+    DHEA — safety_rating: Not recommended | treats: Depression
+
+  FINAL ANSWER:
+    **You're not currently taking any supplements, so there are no interactions to worry about right now. However, because you're on Warfarin, there are several common supplements you should avoid or use very carefully if you ever consider them.**
+    
+    Since you have heart disease and depression, you might be thinking about supplements that could help with those conditions. Here's what you need to know about **Warfarin** and supplements:
+    
+    **Fish oil** is often recommended for heart disease, but it has blood-thinning effects similar to Warfarin. The omega-3 fatty acids in fish oil (EPA and DHA) work like anticoagulants, which means taking fish oil with your Warfarin increases your risk of bleeding. **St. John's wort** is sometimes used for depression, but it directly interacts with Warfarin and also has anticoagulant effects—this combination is dangerous. **Vitamin A** and **folate (folic acid)** both interact directly with Warfarin and can affect how well it works. **DHEA**, sometimes considered for depression, also interacts with your Warfarin.
+    
+    > **How we found this:** Fish oil → contains → Eicosapentaenoic acid (EPA) → equivalent to → Icosapent → interacts with → Warfarin
+    
+    > **How we found this:** St. John's wort → directly interacts with → Warfarin
+    
+    The safest options if you want to support your heart health would be **flaxseed or flaxseed oil**, which don't interact with Warfarin. For depression, **SAMe** is generally safe with your medication.
+    
+    ---
+    
+    We didn't assess whether you have any vitamin or mineral deficiencies, which would require lab work from your doctor.
+    
+    Talk to your healthcare provider before starting any supplements—they'll need to monitor your INR levels closely if you add anything new while on Warfarin.
+
+
+Test 8
+------------------------------------------------------------
+  Question:  I'm a vegan with diabetes on Metformin. Complete review.
+  Type:      multi_agent
+  Desc:      ALL_THREE_COMPLEX — Vegan(8 def) + Diabetes(3 recs incl CoQ10) + CoQ10↔Metformin. Full pipeline known results at every stage.
+
+  PATIENT PROFILE:
+    Medications:          Metformin
+    Supplements:          None
+    Conditions:           Diabetes
+    Dietary Restrictions: Vegan
+
+  NORMALIZED ENTITIES:
+    Medications:          ['Metformin']
+    Supplements:          None
+    Conditions:           ['Diabetes']
+    Dietary Restrictions: ['Vegan']
+    Candidate Supplements: ['Coenzyme Q10', 'Flaxseed and flaxseed oil', 'Milk thistle']
+
+  PIPELINE METADATA:
+    Iterations:      4
+    Specialists ran: Safety, Deficiency, Recommendation
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: ['Metformin'], supplements: [], conditions: ['Diabetes'], dietary restrictions: ['Vegan']
+    2. Normalized — medications: ['Metformin'], supplements: [], conditions: ['Diabetes'], dietary restrictions: ['Vegan']
+    3. Supervisor (iteration 1): A vegan patient with diabetes taking Metformin is requesting a complete safety and nutritional review of their current regimen. → check_deficiency — Starting with deficiency check is most critical since vegan diets combined with Metformin use can create specific nutrient deficiencies (particularly B12), and the patient is not currently taking any supplements to address these risks.
+    4. Deficiency check: Found 8 nutrient(s) at risk (8 from diet, 1 from medications) — 1 critical overlap(s)
+    5. Supervisor (iteration 2): Vegan patient with diabetes on Metformin requesting a complete supplement review, with deficiency analysis already showing 8 at-risk nutrients including critical B12 depletion. → get_recommendations — A complete review requires supplement recommendations to address the identified deficiencies, and since the patient is not currently taking any supplements, safety checking can be deferred until after recommendations are provided.
+    6. Recommendation check: Found 3 supplement candidate(s) for Diabetes — safety check pending
+    7. Supervisor (iteration 3): Vegan patient with diabetes on Metformin requesting a complete supplement review; deficiency analysis shows 8 at-risk nutrients including critical B12 depletion, and 3 diabetes supplement candidates have been identified but not yet checked for safety interactions with Metformin. → check_safety — The recommended supplements (Coenzyme Q10, Flaxseed oil, Milk thistle) need safety verification against Metformin before providing a complete review, and check_safety has not yet been run.
+    8. Safety check: Found 4 interaction(s) across 2 pathway(s) between Coenzyme Q10, Flaxseed and flaxseed oil, Milk thistle and Metformin (Drug-Drug Interaction via Equivalent: 2, Reverse Drug-Drug Interaction via Equivalent: 2)
+    9. Supervisor (iteration 4): Vegan patient with diabetes on Metformin requesting a complete review of supplement safety, deficiency risks, and treatment recommendations. → synthesize — All three relevant specialists have already run and returned comprehensive results covering safety interactions, nutrient deficiencies, and supplement recommendations for this patient's complete review request.
+    10. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS:
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+
+  DEFICIENCY FINDINGS:
+    Nutrients at risk: Calcium, Iodine, Iron, Omega-3 (EPA/DHA), Protein, Vitamin B12, Vitamin D, Zinc
+    Critical overlaps:
+      🚨 Vitamin B12: Vitamin B12 is affected by 2 sources: Vegan, Metformin
+
+  RECOMMENDATION CANDIDATES:
+    Coenzyme Q10 — safety_rating: Generally safe | treats: Diabetes
+    Flaxseed and flaxseed oil — safety_rating: Generally safe | treats: Diabetes
+    Milk thistle — safety_rating: Generally safe | treats: Diabetes
+
+  FINAL ANSWER:
+    **You're not taking any supplements right now, so there are no interactions to worry about. However, as a vegan on Metformin, you have significant nutritional gaps that need attention—especially vitamin B12, which is being depleted from two directions.**
+    
+    Your **Metformin** actively depletes **vitamin B12** from your body, and your vegan diet already puts you at high risk for B12 deficiency since it's only found naturally in animal products. This compounded risk means you're facing B12 deficiency from both sources simultaneously. Low B12 causes nerve damage, fatigue, and can worsen diabetic complications, so supplementation here isn't optional—it's essential.
+    
+    Beyond B12, your vegan diet puts you at risk for deficiencies in **calcium, iodine, iron, omega-3 fatty acids (EPA/DHA), protein, vitamin D, and zinc**. These aren't theoretical concerns—vegans commonly run low on these nutrients because they're either absent from plant foods or poorly absorbed from plant sources compared to animal sources.
+    
+    For your diabetes specifically, **Coenzyme Q10, flaxseed oil, and milk thistle** are generally safe options if you're considering supplements for blood sugar support. However, CoQ10 does have an interaction with your Metformin that would need monitoring.
+    
+    ---
+    
+    Talk with your doctor about getting your B12 level checked and starting supplementation—this one's urgent given the double hit from your diet and medication.
+
+
+Test 9
+------------------------------------------------------------
+  Question:  I take Zinc and Vitamin A supplements. I'm also on a keto diet.
+  Type:      multi_agent
+  Desc:      DEF_SUPP_PATHWAY — Keto(4 diet def) + Zinc→Iron/Calcium/Copper + Vit A→Vit D. Tests supplement depletion in multi-agent context.
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          Zinc, Vitamin A
+    Conditions:           None
+    Dietary Restrictions: Keto
+
+  NORMALIZED ENTITIES:
+    Medications:          None
+    Supplements:          ['Zinc', 'Vitamin A']
+    Conditions:           None
+    Dietary Restrictions: ['Keto', 'keto diet']
+    Candidate Supplements: None
+
+  PIPELINE METADATA:
+    Iterations:      3
+    Specialists ran: Safety, Deficiency
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: [], supplements: ['Zinc', 'Vitamin A'], conditions: [], dietary restrictions: ['Keto', 'keto diet']
+    2. Normalized — medications: [], supplements: ['Zinc', 'Vitamin A'], conditions: [], dietary restrictions: ['Keto', 'keto diet']
+    3. Supervisor (iteration 1): Patient is taking Zinc and Vitamin A supplements while following a keto diet, with no medications or health conditions, and the question appears to be seeking general guidance about their current supplement regimen. → check_deficiency — Since the user hasn't asked a specific question but provided their supplement and diet information, checking for potential nutrient deficiencies from the keto diet is the most relevant first step to provide useful guidance.
+    4. Deficiency check: Found 8 nutrient(s) at risk (4 from diet, 4 from supplements)
+    5. Supervisor (iteration 2): Patient is taking Zinc and Vitamin A supplements while following a keto diet, with no medications or health conditions; the question appears to be a general statement seeking analysis of their current regimen. → check_safety — The user has provided their supplement list and diet, so we should check for safety interactions between Zinc and Vitamin A supplements before synthesizing a complete analysis.
+    6. Safety check: skipped — no medications to check against
+    7. Supervisor (iteration 3): Patient is taking Zinc and Vitamin A supplements while following a keto diet, with no medications or health conditions; the question appears to be a general statement seeking safety/deficiency analysis. → synthesize — Both relevant specialists (check_safety and check_deficiency) have already run and provided comprehensive results showing no medication interactions but multiple nutrient deficiencies from both the keto diet and supplement interactions, which is sufficient to provide a complete answer.
+    8. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS: None (status: no_medications)
+
+  DEFICIENCY FINDINGS:
+    Nutrients at risk: Fiber, Magnesium, Potassium, Vitamin C, Iron, Vitamin D, Calcium, Copper
+
+  RECOMMENDATION CANDIDATES: None (status: did not run)
+
+  FINAL ANSWER:
+    **You're not taking any medications, so there are no drug interactions to worry about. However, your supplement combination and keto diet are creating several nutrient deficiency risks that need attention.**
+    
+    Your **Zinc** supplement is interfering with three important minerals. Zinc blocks iron absorption in your gut, depletes copper from your body, and interferes with calcium absorption. If you're taking high doses of zinc long-term, you could develop deficiencies in all three of these nutrients.
+    
+    Your **Vitamin A** supplement is interfering with **Vitamin D**. These two vitamins compete with each other, so taking vitamin A can prevent your body from properly using vitamin D, even if you're getting enough of it from sun exposure or food.
+    
+    Your **keto diet** puts you at risk for four common deficiencies: fiber, magnesium, potassium, and vitamin C. These nutrients are abundant in fruits, whole grains, and starchy vegetables—foods that are restricted on keto. Without intentional planning, you're likely not getting enough of them.
+    
+    ---
+    
+    I didn't assess specific supplement recommendations since you asked about what you're currently taking. Talk to your doctor about getting blood work to check your levels of iron, copper, calcium, vitamin D, magnesium, and potassium, and discuss whether you need to adjust your supplement routine or add others to cover these gaps.
+
+
+Test 10
+------------------------------------------------------------
+  Question:  I take Zinc and Melatonin with Carbamazepine. I follow a vegan diet.
+  Type:      multi_agent
+  Desc:      STRESS_TEST — Safety(Zinc+Melatonin↔Carbamazepine) + Def(Vegan 8 + Carbamazepine→B12 + Zinc→Iron/Calcium/Copper). Max complexity.
+
+  PATIENT PROFILE:
+    Medications:          Carbamazepine
+    Supplements:          Zinc, Melatonin
+    Conditions:           None
+    Dietary Restrictions: Vegan
+
+  NORMALIZED ENTITIES:
+    Medications:          ['Carbamazepine']
+    Supplements:          ['Zinc', 'Melatonin']
+    Conditions:           None
+    Dietary Restrictions: ['Vegan']
+    Candidate Supplements: None
+
+  PIPELINE METADATA:
+    Iterations:      3
+    Specialists ran: Safety, Deficiency
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: ['Carbamazepine'], supplements: ['Zinc', 'Melatonin'], conditions: [], dietary restrictions: ['Vegan']
+    2. Normalized — medications: ['Carbamazepine'], supplements: ['Zinc', 'Melatonin'], conditions: [], dietary restrictions: ['Vegan']
+    3. Supervisor (iteration 1): Patient is taking Zinc and Melatonin supplements along with Carbamazepine medication while following a vegan diet, and appears to be stating their current regimen without asking a specific question. → check_safety — Since the user mentions taking supplements with a medication but hasn't asked a specific question, the most critical first step is to check for potential interactions between their supplements (Zinc, Melatonin) and their medication (Carbamazepine) to ensure safety.
+    4. Safety check: Found 8 interaction(s) across 2 pathway(s) between Zinc, Melatonin and Carbamazepine (Drug-Drug Interaction via Equivalent: 4, Reverse Drug-Drug Interaction via Equivalent: 4)
+    5. Supervisor (iteration 2): Patient takes Zinc and Melatonin supplements with Carbamazepine medication while following a vegan diet, and appears to be stating their current regimen without asking a specific question. → check_deficiency — Since the patient follows a vegan diet which commonly leads to nutrient deficiencies, and we've already checked safety interactions, we should check for potential deficiencies before synthesizing a complete answer.
+    6. Deficiency check: Found 12 nutrient(s) at risk (8 from diet, 6 from medications, 3 from supplements) — 4 critical overlap(s)
+    7. Supervisor (iteration 3): Patient is on Carbamazepine with Zinc and Melatonin supplements, follows a vegan diet, and appears to be stating their current regimen without asking a specific question. → synthesize — The user's statement doesn't pose a specific question, but both relevant specialists (safety and deficiency checks) have already run and identified critical interactions and nutrient deficiencies that should be communicated to the patient.
+    8. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS:
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [HIGH] Melatonin ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Melatonin ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+
+  DEFICIENCY FINDINGS:
+    Nutrients at risk: Calcium, Iodine, Iron, Omega-3 (EPA/DHA), Protein, Vitamin B12, Vitamin D, Zinc, Folate (folic acid), Vitamin B6 (Pyridoxine), Biotin (Vitamin B7), Copper
+    Critical overlaps:
+      🚨 Calcium: Calcium is affected by 3 sources: Vegan, Carbamazepine, Zinc
+      🚨 Iron: Iron is affected by 2 sources: Vegan, Zinc
+      🚨 Vitamin B12: Vitamin B12 is affected by 2 sources: Vegan, Carbamazepine
+      🚨 Vitamin D: Vitamin D is affected by 2 sources: Vegan, Carbamazepine
+
+  RECOMMENDATION CANDIDATES: None (status: did not run)
+
+  FINAL ANSWER:
+    **You have two significant interactions between your supplements and Carbamazepine that need to be addressed, and your vegan diet combined with your medication puts you at serious risk for multiple nutrient deficiencies.**
+    
+    Your **Zinc** supplement interacts with your **Carbamazepine**. This is a bidirectional interaction—the two affect each other regardless of which form of zinc you're taking (gluconate, citrate, or sulfate). Your **Melatonin** also interacts with your **Carbamazepine**. These interactions can affect how well your medication works and how your body processes these supplements.
+    
+    Now here's the bigger concern: you're facing compounded deficiency risks from multiple sources. Your **Carbamazepine** depletes vitamin B12, vitamin D, folate, vitamin B6, and biotin from your body. Your **vegan diet** already puts you at risk for calcium, iodine, iron, omega-3 (EPA/DHA), protein, vitamin B12, vitamin D, and zinc deficiencies. Where these overlap—**B12, vitamin D, calcium**—you have double the risk because both your diet and medication are working against you. On top of that, your **Zinc** supplement interferes with calcium and iron absorption and depletes copper, making those deficiency risks even worse.
+    
+    > **How we found this:** Zinc → contains -> Zinc gluconate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+    
+    > **How we found this:** Melatonin → contains -> Melatonin -> equivalent to -> Melatonin -> interacts with -> Carbamazepine
+    
+    ---
+    
+    This analysis focused on safety interactions and deficiency risks—it didn't include specific supplement recommendations for what you should take instead. Talk to your doctor about these interactions and get a plan to address these nutrient deficiencies, especially the compounded risks for B12, vitamin D, and calcium.
+
+
+Test 11
+------------------------------------------------------------
+  Question:  I'm dairy-free and gluten-free with osteoporosis.
+  Type:      multi_agent
+  Desc:      DEF_PLUS_REC_MULTI — two diets (6 def) + Osteoporosis(2 recs). No meds so safety clean.
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Osteoporosis
+    Dietary Restrictions: Dairy-Free, Gluten-Free
+
+  NORMALIZED ENTITIES:
+    Medications:          None
+    Supplements:          None
+    Conditions:           ['Osteoporosis']
+    Dietary Restrictions: ['Dairy-Free', 'Gluten-Free']
+    Candidate Supplements: ['Vitamin D', 'DHEA']
+
+  PIPELINE METADATA:
+    Iterations:      4
+    Specialists ran: Safety, Deficiency, Recommendation
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: [], supplements: [], conditions: ['Osteoporosis'], dietary restrictions: ['Dairy-Free', 'Gluten-Free']
+    2. Normalized — medications: [], supplements: [], conditions: ['Osteoporosis'], dietary restrictions: ['Dairy-Free', 'Gluten-Free']
+    3. Supervisor (iteration 1): Patient has osteoporosis with dairy-free and gluten-free dietary restrictions, likely seeking guidance on supplement needs given these constraints. → check_deficiency — Given the dairy-free restriction which eliminates a major calcium source and the osteoporosis diagnosis, checking for nutrient deficiencies is the most relevant first step before making any recommendations.
+    4. Deficiency check: Found 6 nutrient(s) at risk (6 from diet)
+    5. Supervisor (iteration 2): Patient has osteoporosis with dairy-free and gluten-free dietary restrictions, and the question appears to be seeking guidance on managing their condition given these constraints. → get_recommendations — The deficiency check has identified multiple nutrient gaps (especially high-risk calcium deficiency relevant to osteoporosis), so we need to find supplement recommendations to address both the osteoporosis condition and the identified deficiencies before synthesizing a complete answer.
+    6. Recommendation check: Found 2 supplement candidate(s) for Osteoporosis — safety check pending
+    7. Supervisor (iteration 3): Patient has osteoporosis with dairy-free and gluten-free dietary restrictions, and we've identified nutrient deficiencies and supplement candidates but haven't checked safety of the recommended supplements yet. → check_safety — We have supplement recommendations (Vitamin D and DHEA) that need safety verification before providing final guidance to the patient, even though they're not currently taking medications or other supplements.
+    8. Safety check: skipped — no medications to check against
+    9. Supervisor (iteration 4): Patient has osteoporosis with dairy-free and gluten-free dietary restrictions, and appears to be seeking guidance on their situation (likely supplement recommendations and deficiency risks). → synthesize — All three relevant specialists have already run and returned comprehensive results covering safety (no interactions), deficiencies (6 nutrients at risk including high-risk calcium), and recommendations (Vitamin D and DHEA for osteoporosis), providing sufficient information to answer the patient's question.
+    10. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS: None (status: no_medications)
+
+  DEFICIENCY FINDINGS:
+    Nutrients at risk: Calcium, Fiber, Folate (folic acid), Iron, Vitamin B12, Vitamin D
+
+  RECOMMENDATION CANDIDATES:
+    Vitamin D — safety_rating: Generally safe | treats: Osteoporosis
+    DHEA — safety_rating: Not recommended | treats: Osteoporosis
+
+  FINAL ANSWER:
+    **You're at significant risk for calcium and vitamin D deficiency, which directly worsens osteoporosis. You need to address this immediately with supplementation and dietary changes.**
+    
+    Your dairy-free diet puts you at risk for **calcium**, **vitamin B12**, and **vitamin D** deficiency. Your gluten-free diet adds risk for **fiber**, **folate**, and **iron** deficiency. The calcium and vitamin D deficiencies are particularly concerning because your bones are already weakened by osteoporosis—these nutrients are essential for bone strength and preventing further bone loss.
+    
+    **Vitamin D** is generally safe and specifically recommended for osteoporosis. You should be taking this supplement. Calcium supplementation is also critical given your dairy-free diet and bone condition. You'll need to get these from fortified non-dairy foods (like fortified almond or oat milk, leafy greens, fortified orange juice) or supplements.
+    
+    Avoid **DHEA** supplements—they're not recommended for osteoporosis treatment. Focus instead on the nutrients your body actually needs: calcium, vitamin D, and the B vitamins you're missing from your restricted diet.
+    
+    ---
+    
+    Talk to your doctor about specific dosing for calcium and vitamin D supplements, and consider getting your levels tested to see how deficient you are.
+
+
+Test 12
+------------------------------------------------------------
+  Question:  I take Fish Oil and follow a vegan diet. Is everything okay?
+  Type:      multi_agent
+  Desc:      EARLY_STOP_CHECK2 — Has Warfarin + Fish Oil (safety) + Vegan (deficiency). If supervisor finds interaction and synthesizes without checking deficiency that is partial.
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          Fish Oil
+    Conditions:           None
+    Dietary Restrictions: Vegan
+
+  NORMALIZED ENTITIES:
+    Medications:          ['Warfarin']
+    Supplements:          ['Fish oil']
+    Conditions:           None
+    Dietary Restrictions: ['Vegan']
+    Candidate Supplements: None
+
+  PIPELINE METADATA:
+    Iterations:      3
+    Specialists ran: Safety, Deficiency
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: ['Warfarin'], supplements: ['Fish Oil'], conditions: [], dietary restrictions: ['Vegan']
+    2. Normalized — medications: ['Warfarin'], supplements: ['Fish oil'], conditions: [], dietary restrictions: ['Vegan']
+    3. Supervisor (iteration 1): Patient is on Warfarin, taking Fish Oil supplement, follows a vegan diet, and is asking whether their current supplement regimen is safe given these factors. → check_safety — Need to check for interactions between Fish Oil and Warfarin (known anticoagulants that may interact), and also assess whether the vegan diet combined with current supplements creates any safety concerns.
+    4. Safety check: Found 5 interaction(s) across 3 pathway(s) between Fish oil and Warfarin (Drug-Drug Interaction via Equivalent: 2, Reverse Drug-Drug Interaction via Equivalent: 2, Similar Effect Category: 1)
+    5. Supervisor (iteration 2): Patient takes Fish Oil supplement while on Warfarin and follows a vegan diet; asking if their current regimen is safe. → check_deficiency — Safety has been checked and found HIGH severity interactions, but the patient's vegan diet may lead to nutrient deficiencies that should be evaluated before providing a complete answer.
+    6. Deficiency check: Found 10 nutrient(s) at risk (8 from diet, 1 from medications, 1 from supplements)
+    7. Supervisor (iteration 3): Patient on Warfarin taking Fish Oil supplement while following a vegan diet is asking if their current regimen is safe and appropriate. → synthesize — Both relevant specialists (check_safety and check_deficiency) have already run and provided comprehensive information about the Fish Oil-Warfarin interaction and vegan diet deficiencies, which is sufficient to answer whether 'everything is okay'.
+    8. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS:
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [MODERATE] Fish oil ↔ Warfarin | Pathway: Similar Effect Category
+      Description: Supplement has similar effect to same category as medication drug
+
+  DEFICIENCY FINDINGS:
+    Nutrients at risk: Calcium, Iodine, Iron, Omega-3 (EPA/DHA), Protein, Vitamin B12, Vitamin D, Zinc, Vitamin K, Vitamin E
+
+  RECOMMENDATION CANDIDATES: None (status: did not run)
+
+  FINAL ANSWER:
+    **No, this is not okay. Fish oil significantly increases your bleeding risk when combined with Warfarin, and there's also a contradiction in your supplement choices.**
+    
+    Your **Fish oil** contains omega-3 fatty acids (EPA and DHA) that act like blood thinners—the same way your **Warfarin** does. When you take them together, you're essentially doubling up on anticoagulant effects, which means you're at much higher risk of bleeding or bruising. The omega-3s in fish oil are chemically equivalent to prescription omega-3 drugs that are known to interact with Warfarin.
+    
+    Here's the other issue: you're taking **Fish oil** while following a **vegan diet**. Fish oil comes from fish, so this contradicts your dietary choices. If you need omega-3s for your vegan diet (which is a real concern since plant-based diets often lack EPA and DHA), you'd want to look at algae-based omega-3 supplements instead—but you'd still need to discuss this carefully with your doctor because of the Warfarin interaction.
+    
+    > **How we found this:** Fish oil → contains → Eicosapentaenoic acid (EPA) → equivalent to → Icosapent → interacts with → Warfarin
+    
+    Your vegan diet also puts you at risk for deficiencies in B12, vitamin D, iron, calcium, iodine, zinc, and protein. Additionally, your **Warfarin** depletes vitamin K, and **Fish oil** may deplete vitamin E.
+    
+    ---
+    
+    I didn't assess specific supplement recommendations since the safety concern needed to be addressed first. Talk to your doctor before your next dose—they need to know you're taking fish oil with Warfarin.
+
+
+Test 13
+------------------------------------------------------------
+  Question:  I'm on Carbamazepine and take Zinc. I also have depression.
+  Type:      multi_agent
+  Desc:      ALL_THREE_WITH_SAFETY — Safety(Zinc↔Carbamazepine) + Def(Carbamazepine→B12 etc + Zinc→Iron/Calcium/Copper) + Rec(Depression 4 candidates). Tests whether all 3 run when all have data.
+
+  PATIENT PROFILE:
+    Medications:          Carbamazepine
+    Supplements:          Zinc
+    Conditions:           Depression
+    Dietary Restrictions: None
+
+  NORMALIZED ENTITIES:
+    Medications:          ['Carbamazepine']
+    Supplements:          ['Zinc']
+    Conditions:           ['Depression']
+    Dietary Restrictions: None
+    Candidate Supplements: None
+
+  PIPELINE METADATA:
+    Iterations:      2
+    Specialists ran: Safety
+
+  EVIDENCE CHAIN:
+    1. Extracted — medications: ['Carbamazepine'], supplements: ['Zinc'], conditions: ['Depression'], dietary restrictions: []
+    2. Normalized — medications: ['Carbamazepine'], supplements: ['Zinc'], conditions: ['Depression'], dietary restrictions: []
+    3. Supervisor (iteration 1): Patient is taking Carbamazepine for an unspecified condition and Zinc supplement while managing depression; the question appears to be seeking general safety or guidance about this regimen. → check_safety — Since the user mentions their current medication and supplement combination, the first priority is to verify there are no dangerous interactions between Carbamazepine and Zinc before proceeding with other analyses.
+    4. Safety check: Found 6 interaction(s) across 2 pathway(s) between Zinc and Carbamazepine (Drug-Drug Interaction via Equivalent: 3, Reverse Drug-Drug Interaction via Equivalent: 3)
+    5. Supervisor (iteration 2): Patient is taking Carbamazepine for an unspecified condition and Zinc supplement, has depression, and appears to be stating their current situation rather than asking a specific question. → synthesize — The safety check has already been completed showing HIGH severity interactions between Zinc and Carbamazepine; since the user's statement is ambiguous and doesn't explicitly request deficiency analysis or new supplement recommendations, I should synthesize the critical safety findings for the patient.
+    6. Synthesis: generated final answer (LLM)
+
+  SAFETY INTERACTIONS:
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+
+  DEFICIENCY FINDINGS: None (status: did not run)
+
+  RECOMMENDATION CANDIDATES: None (status: did not run)
+
+  FINAL ANSWER:
+    **There's a significant interaction between your Zinc supplement and your Carbamazepine that you need to address.**
+    
+    **Zinc** interferes with how your body absorbs **Carbamazepine**. When you take them together, the zinc binds to the carbamazepine in your digestive system, which means less of your seizure medication gets into your bloodstream. This makes your Carbamazepine less effective at controlling seizures or stabilizing your mood (depending on why you're taking it).
+    
+    This interaction happens regardless of which form of zinc you're taking—whether it's zinc gluconate, zinc citrate, or zinc sulfate. The problem is the zinc itself, not the specific formulation.
+    
+    > **How we found this:** Zinc → contains → Zinc gluconate/citrate/sulfate → equivalent to → Zinc → interacts with → Carbamazepine
+    
+    **The solution is timing.** You need to separate these by at least 2-3 hours. Take your Carbamazepine first, wait several hours, then take your zinc. Never take them at the same time.
+    
+    ---
+    
+    This assessment focused on safety interactions. We didn't evaluate whether zinc supplementation is appropriate for your depression or if you have any nutrient deficiencies.
+    
+    Talk to your doctor or pharmacist about the best dosing schedule to keep both your Carbamazepine effective and allow you to continue your zinc supplementation safely.
+

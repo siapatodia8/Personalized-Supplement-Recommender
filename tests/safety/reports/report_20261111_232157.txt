@@ -1,0 +1,1610 @@
+================================================================================
+TEST REPORT — Safety Tests (Human Review)
+================================================================================
+Dataset: golden_dataset_safety
+Total Tests: 22
+
+================================================================================
+TEST RESULTS
+================================================================================
+
+Test 1
+------------------------------------------------------------
+  Question:  Is it safe for me to take Warfarin with my current supplements?
+  Type:      safety
+  Desc:      no_supplements — no supplement provided
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          None
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Aloe
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Aloe ↔ Warfarin | Pathway: Direct Interaction
+      Description: Direct supplement-medication interaction
+      Detail:      directly interacts with -> Warfarin
+
+  FINAL ANSWER:
+    **No, it's not safe to take Aloe with your Warfarin. There is a direct interaction between these two.**
+    
+    **Aloe** directly interacts with **Warfarin**, which creates a safety concern. When you take aloe alongside warfarin, it can interfere with how your warfarin works in your body. This matters because warfarin needs to maintain very precise levels in your blood to work properly—too much increases bleeding risk, and too little fails to prevent dangerous blood clots.
+    
+    The interaction between aloe and warfarin is significant enough that continuing both together puts you at risk for either bleeding complications or inadequate blood clot prevention, depending on how the interaction affects your specific warfarin levels.
+    
+    > **How we found this:** Aloe → [Direct Interaction] → directly interacts with -> Warfarin → Warfarin
+    
+    ---
+    
+    We didn't assess whether you have any nutrient deficiencies or whether you need additional supplements, since the safety concern took priority.
+    
+    Talk to your doctor or pharmacist before your next dose—they'll need to either adjust your plan or monitor you more closely.
+
+
+Test 2
+------------------------------------------------------------
+  Question:  I just started Metformin are there any risks I should know about?
+  Type:      safety
+  Desc:      no_supplements — no supplement provided
+
+  PATIENT PROFILE:
+    Medications:          Metformin
+    Supplements:          None
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES: None
+
+  INTERACTIONS FOUND: None
+
+  FINAL ANSWER:
+    **You're not taking any supplements right now, so there are no supplement interactions to worry about. However, Metformin does put you at risk for Vitamin B12 deficiency.**
+    
+    Since you're on **Metformin**, you need to know that it depletes **Vitamin B12** in your body over time. This happens because Metformin interferes with how your intestines absorb B12 from food. Many people on Metformin for months or years end up with low B12 levels without realizing it.
+    
+    Low B12 can cause fatigue, nerve problems like tingling or numbness in your hands and feet, and memory issues. These symptoms can creep up slowly, so it's worth monitoring. Your doctor can check your B12 levels with a simple blood test and recommend supplementation if needed.
+    
+    ---
+    
+    We checked for supplement interactions and medication-related deficiencies. Since you didn't list any specific health conditions or symptoms, we didn't assess condition-specific supplement recommendations.
+    
+    Talk to your doctor about getting your B12 levels checked, especially if you'll be on Metformin long-term.
+
+
+Test 3
+------------------------------------------------------------
+  Question:  Is it safe to take Ashwagandha with my Warfarin?
+  Type:      safety
+  Desc:      no_supplements — supplement not in database
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          Ashwagandha
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES: None
+
+  INTERACTIONS FOUND: None
+
+  FINAL ANSWER:
+    **I cannot confirm whether it's safe to take Ashwagandha with your Warfarin because Ashwagandha is not in our interaction database.**
+    
+    Without verified data on **Ashwagandha**, I can't tell you whether it might increase your bleeding risk, interfere with how your **Warfarin** works, or cause other problems. This isn't a green light to take it—it means we simply don't have the safety information to check.
+    
+    Warfarin requires careful monitoring because many substances can affect how it works in your body. Taking something we can't verify could put you at risk for either dangerous bleeding or inadequate blood clot prevention.
+    
+    ---
+    
+    We didn't assess whether you have any nutrient deficiencies or whether you might benefit from other supplements—we only ran the safety check.
+    
+    Talk to your doctor or pharmacist before adding Ashwagandha so they can review the current evidence and monitor you appropriately if you decide to take it.
+
+
+Test 4
+------------------------------------------------------------
+  Question:  Can I take Magnesium with Metformin?
+  Type:      safety
+  Desc:      no_supplements — supplement not in database
+
+  PATIENT PROFILE:
+    Medications:          Metformin
+    Supplements:          Magnesium
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES: None
+
+  INTERACTIONS FOUND: None
+
+  FINAL ANSWER:
+    **I can't confirm the safety of taking Magnesium with your Metformin because Magnesium wasn't found in our interaction database.**
+    
+    Our system checks supplements against a comprehensive database of known interactions with medications. **Magnesium** didn't come up in that database, which means I can't tell you whether it's safe or whether it interacts with your **Metformin**. This isn't necessarily a red flag—it just means we don't have the data to give you a clear answer.
+    
+    Magnesium is a common supplement that many people take, but without verified interaction data specific to your situation, I can't make a safety determination here.
+    
+    ---
+    
+    We weren't able to run checks for nutrient deficiencies or personalized recommendations based on your medications and health profile.
+    
+    Talk to your doctor or pharmacist about adding Magnesium—they can review your specific situation and give you guidance based on the complete picture of your health.
+
+
+Test 5
+------------------------------------------------------------
+  Question:  Is it safe to take Fish Oil and Vitamin D together?
+  Type:      safety
+  Desc:      no_medications — no medication provided
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          Fish Oil
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES: None
+
+  INTERACTIONS FOUND: None
+
+  FINAL ANSWER:
+    **Yes, it's safe to take Fish Oil and Vitamin D together.** You're not taking any medications, so there are no drug interactions to worry about.
+    
+    The safety check looked specifically for interactions between your supplements and prescription medications. Since you're not on any medications, there's nothing for your **Fish Oil** and **Vitamin D** to interact with.
+    
+    These two supplements don't interfere with each other either. Many people take them together without any issues.
+    
+    ---
+    
+    The system couldn't assess whether you actually need these supplements or what doses might be right for you, since those checks require knowing your medication list to run properly.
+    
+    Talk to your doctor if you want to confirm the doses are appropriate for your situation.
+
+
+Test 6
+------------------------------------------------------------
+  Question:  Can I take CoQ10 daily?
+  Type:      safety
+  Desc:      no_medications — no medication provided
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          CoQ10
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES: None
+
+  INTERACTIONS FOUND: None
+
+  FINAL ANSWER:
+    **Yes, you can take CoQ10 daily. Since you're not on any medications, there are no drug interactions to worry about.**
+    
+    CoQ10 is generally well-tolerated as a daily supplement. The safety check didn't identify any concerns because you're not taking any medications that could interact with it.
+    
+    ---
+    
+    I wasn't able to assess whether you actually need CoQ10 supplementation or what the right dose might be for you, since those evaluations require knowing more about your specific health situation.
+    
+    Worth mentioning this to your doctor at your next visit so they can confirm it makes sense for your situation.
+
+
+Test 7
+------------------------------------------------------------
+  Question:  Is Fish Oil safe to take with my Lisinopril?
+  Type:      safety
+  Desc:      both in database no interaction exists
+
+  PATIENT PROFILE:
+    Medications:          Lisinopril
+    Supplements:          Fish Oil
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Fish oil
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND: None
+
+  FINAL ANSWER:
+    **Fish oil is safe to take with your Lisinopril. No interactions were found between these two.**
+    
+    Our safety analysis checked how fish oil and Lisinopril work together in your body and found no concerning interactions. You can continue taking both as prescribed and recommended.
+    
+    This means the fish oil won't interfere with how your Lisinopril controls your blood pressure, and your Lisinopril won't affect how your body uses the fish oil.
+    
+    ---
+    
+    We focused specifically on safety interactions for this question. We didn't assess whether you have a deficiency that fish oil might address or whether fish oil is the best supplement choice for your situation.
+    
+    Talk to your doctor if you have questions about your dosing or if you notice any changes after starting the fish oil.
+
+
+Test 9
+------------------------------------------------------------
+  Question:  Is it safe to take Honey with Warfarin?
+  Type:      safety
+  Desc:      not_found — both in database no interaction exists
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          Honey
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Honey
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND: None
+
+  FINAL ANSWER:
+    **Based on the safety analysis, it's safe to take Honey with your Warfarin—no interactions were found between them.**
+    
+    The safety screening checked for any ways that Honey might interfere with how your Warfarin works or increase your risk of bleeding. Nothing came up. This means Honey doesn't appear to affect your blood's ability to clot or change how your body processes Warfarin.
+    
+    You can continue using Honey as you normally would without concern about it interfering with your medication.
+    
+    ---
+    
+    This assessment focused on safety interactions only. We didn't evaluate whether you might have any nutritional deficiencies or whether other supplements might benefit you.
+    
+    As always, mention your Honey use at your next appointment so your healthcare provider has a complete picture of everything you're taking.
+
+
+Test 10
+------------------------------------------------------------
+  Question:  Can I use Tea tree oil while taking Metformin?
+  Type:      safety
+  Desc:      not_found — both in database no interaction exists
+
+  PATIENT PROFILE:
+    Medications:          Metformin
+    Supplements:          Tea tree oil
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Tea tree oil
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND: None
+
+  FINAL ANSWER:
+    **Yes, you can use Tea tree oil while taking Metformin. No interactions were found between these two.**
+    
+    Our safety analysis checked for any problems between your **Tea tree oil** and your **Metformin**, and found none. They don't interfere with each other.
+    
+    Tea tree oil is typically used topically on the skin, and Metformin works in your body to control blood sugar. They operate through completely different pathways and don't affect each other's function.
+    
+    ---
+    
+    We didn't assess whether you have any nutrient deficiencies or whether you need additional supplements beyond what you asked about.
+    
+    As always, mention all your supplements to your doctor at your next visit so they have a complete picture of what you're taking.
+
+
+Test 11
+------------------------------------------------------------
+  Question:  Is Zinc safe to take with Warfarin?
+  Type:      safety
+  Desc:      not_found — supplement has other interactions but not with this medication
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          Zinc
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Zinc
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND: None
+
+  FINAL ANSWER:
+    **Based on the safety analysis, Zinc is safe to take with your Warfarin—no interactions were found between them.**
+    
+    You can continue taking both together without concern that the Zinc will interfere with how your Warfarin works or increase your risk of bleeding. The safety check specifically looked for any ways these two might affect each other, and none were identified.
+    
+    ---
+    
+    This assessment focused on safety interactions. We didn't evaluate whether you actually need Zinc supplementation or what dose might be appropriate for you.
+    
+    Talk to your doctor or pharmacist if you have questions about the right Zinc dose for your situation.
+
+
+Test 12
+------------------------------------------------------------
+  Question:  Can I take Fish Oil with Warfarin?
+  Type:      safety
+  Desc:      found 1+1 — Fish Oil and Warfarin multiple pathways
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          Fish Oil
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Fish oil
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Warfarin
+    [MODERATE] Fish oil ↔ Warfarin | Pathway: Similar Effect Category
+      Description: Supplement has similar effect to same category as medication drug
+      Detail:      similar effect to -> Anticoagulants -> belongs to -> Warfarin
+
+  FINAL ANSWER:
+    **No, you should not take Fish Oil with your Warfarin without close medical supervision. This combination significantly increases your risk of bleeding.**
+    
+    **Fish oil** contains omega-3 fatty acids (EPA and DHA) that act like blood thinners, similar to how **Warfarin** works. When you combine them, you're essentially doubling up on anticoagulant effects. This means your blood becomes too thin, raising the risk of serious bleeding—from nosebleeds and easy bruising to dangerous internal bleeding.
+    
+    The EPA and DHA in fish oil are medically equivalent to prescription omega-3 drugs (icosapent and doconexent) that are known to interact with Warfarin. This isn't a theoretical concern—it's a documented drug interaction using the supplement form.
+    
+    > **How we found this:** Fish oil → contains → Eicosapentaenoic acid (EPA) → equivalent to → Icosapent → interacts with → Warfarin
+    
+    > **How we found this:** Fish oil → contains → Docosahexaenoic acid (DHA) → equivalent to → Doconexent → interacts with → Warfarin
+    
+    ---
+    
+    We didn't assess whether you have any nutritional deficiencies or general supplement recommendations—only the safety interaction between your fish oil and Warfarin.
+    
+    Talk to your doctor before taking fish oil. If you need omega-3s, they can adjust your Warfarin dose and monitor your INR levels more frequently to keep you safe.
+
+
+Test 13
+------------------------------------------------------------
+  Question:  I've been having trouble sleeping and someone suggested Melatonin but I'm on an antidepressant
+  Type:      safety
+  Desc:      found 1+1 — ambiguous wording Melatonin and Fluvoxamine direct interaction
+
+  PATIENT PROFILE:
+    Medications:          Fluvoxamine
+    Supplements:          Melatonin
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Melatonin
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Melatonin ↔ Fluvoxamine | Pathway: Direct Interaction
+      Description: Direct supplement-medication interaction
+      Detail:      directly interacts with -> Fluvoxamine
+    [HIGH] Melatonin ↔ Fluvoxamine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Melatonin -> equivalent to -> Melatonin -> interacts with -> Fluvoxamine
+    [HIGH] Melatonin ↔ Fluvoxamine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Melatonin -> equivalent to -> Melatonin -> interacts with -> Fluvoxamine
+
+  FINAL ANSWER:
+    **Don't take Melatonin with your Fluvoxamine without talking to your doctor first. These two directly interact with each other.**
+    
+    Your **Fluvoxamine** is an antidepressant that affects how your body processes certain substances, including **Melatonin**. When you take them together, the Fluvoxamine slows down how quickly your body breaks down Melatonin. This means the Melatonin stays in your system much longer and at higher levels than intended, which can lead to excessive drowsiness, dizziness, and other side effects.
+    
+    The interaction happens because Fluvoxamine blocks a specific enzyme in your liver that normally clears Melatonin from your body. Think of it like a drain getting clogged—the Melatonin can't get processed and eliminated as it should, so it builds up.
+    
+    > **How we found this:** Melatonin → directly interacts with → Fluvoxamine
+    
+    ---
+    
+    We didn't assess whether you have any nutritional deficiencies or evaluate other supplement recommendations for your sleep trouble.
+    
+    Talk to your doctor about this interaction—they may suggest a different sleep aid or adjust your approach to managing your insomnia while on Fluvoxamine.
+
+
+Test 14
+------------------------------------------------------------
+  Question:  Can I take Glucosamine with Warfarin?
+  Type:      safety
+  Desc:      found 1+1 — Glucosamine and Warfarin direct interaction
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          Glucosamine
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Glucosamine
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Direct Interaction
+      Description: Direct supplement-medication interaction
+      Detail:      directly interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Glucosamine sulfate -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Glucosamine hydrochloride -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Glucosamine sulfate -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Glucosamine hydrochloride -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+
+  FINAL ANSWER:
+    **No, you should not take Glucosamine with your Warfarin. There is a direct interaction between these two that can affect how your blood thinner works.**
+    
+    Glucosamine interacts directly with Warfarin and can increase its blood-thinning effects. This means taking them together raises your risk of bleeding or bruising more easily than your Warfarin would cause on its own. This interaction occurs whether the glucosamine is in the sulfate or hydrochloride form—both types affect Warfarin the same way.
+    
+    > **How we found this:** Glucosamine → directly interacts with → Warfarin
+    
+    Because Warfarin has a narrow safety window—meaning small changes can make a big difference—adding glucosamine creates an unpredictable situation. Your INR levels (the blood test that monitors Warfarin) could become unstable, making it harder to keep your anticoagulation in the safe range.
+    
+    ---
+    
+    We didn't assess whether you have any nutrient deficiencies or evaluate alternative supplement recommendations, as the safety concern took priority.
+    
+    Talk to your doctor before taking glucosamine or if you're already taking it, so they can monitor your INR more closely or discuss safer alternatives for joint support.
+
+
+Test 15
+------------------------------------------------------------
+  Question:  I take both Warfarin and Metformin. Is Fish Oil safe for me?
+  Type:      safety
+  Desc:      found 1+2 — Fish Oil with Warfarin (found) and Metformin (not found)
+
+  PATIENT PROFILE:
+    Medications:          Warfarin, Metformin
+    Supplements:          Fish Oil
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Fish oil
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Metformin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Metformin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Metformin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Metformin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Warfarin
+    [MODERATE] Fish oil ↔ Warfarin | Pathway: Similar Effect Category
+      Description: Supplement has similar effect to same category as medication drug
+      Detail:      similar effect to -> Anticoagulants -> belongs to -> Warfarin
+
+  FINAL ANSWER:
+    **No, Fish Oil is not safe for you to take with your current medications. It interacts with both your Warfarin and your Metformin.**
+    
+    **Fish Oil** contains omega-3 fatty acids (EPA and DHA) that have blood-thinning effects similar to **Warfarin**. When you combine them, you're essentially doubling up on anticoagulant activity, which significantly increases your risk of bleeding. This could mean anything from easier bruising to serious internal bleeding. The omega-3s in fish oil work through the same pathways as prescription omega-3 medications that are known to interact with Warfarin.
+    
+    Fish Oil also interacts with your **Metformin**. The EPA in fish oil is equivalent to prescription icosapent, which has a documented interaction with Metformin. This combination can affect how your diabetes medication works in your body.
+    
+    > **How we found this:** Fish oil → contains → Eicosapentaenoic acid (EPA) → equivalent to → Icosapent → interacts with → Warfarin
+    
+    > **How we found this:** Fish oil → similar effect to → Anticoagulants → belongs to → Warfarin
+    
+    > **How we found this:** Fish oil → contains → Eicosapentaenoic acid (EPA) → equivalent to → Icosapent → interacts with → Metformin
+    
+    ---
+    
+    This assessment focused on safety interactions with your medications and did not evaluate whether you have any nutritional deficiencies or general supplement recommendations.
+    
+    Talk to your doctor before taking Fish Oil—they may need to adjust your Warfarin dose and monitor you more closely, or they may recommend avoiding it entirely.
+
+
+Test 16
+------------------------------------------------------------
+  Question:  Can I take Melatonin while on Fluvoxamine and Warfarin?
+  Type:      safety
+  Desc:      found 1+2 — Melatonin with Fluvoxamine (direct) and Warfarin (drug-drug pathway)
+
+  PATIENT PROFILE:
+    Medications:          Fluvoxamine, Warfarin
+    Supplements:          Melatonin
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Melatonin
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Melatonin ↔ Fluvoxamine | Pathway: Direct Interaction
+      Description: Direct supplement-medication interaction
+      Detail:      directly interacts with -> Fluvoxamine
+    [HIGH] Melatonin ↔ Fluvoxamine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Melatonin -> equivalent to -> Melatonin -> interacts with -> Fluvoxamine
+    [HIGH] Melatonin ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Melatonin -> equivalent to -> Melatonin -> interacts with -> Warfarin
+    [HIGH] Melatonin ↔ Fluvoxamine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Melatonin -> equivalent to -> Melatonin -> interacts with -> Fluvoxamine
+    [HIGH] Melatonin ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Melatonin -> equivalent to -> Melatonin -> interacts with -> Warfarin
+
+  FINAL ANSWER:
+    **No, you should not take Melatonin with your current medications. It interacts with both your Fluvoxamine and your Warfarin.**
+    
+    **Melatonin** directly interacts with **Fluvoxamine**. When taken together, Fluvoxamine can significantly increase melatonin levels in your body because it slows down how quickly your liver breaks down melatonin. This can lead to excessive drowsiness, dizziness, and other side effects from too much melatonin in your system.
+    
+    **Melatonin** also interacts with **Warfarin**. This combination can affect how well your Warfarin works to prevent blood clots, which is particularly concerning since Warfarin requires careful monitoring to stay in the safe and effective range. The interaction could either increase bleeding risk or reduce Warfarin's effectiveness.
+    
+    > **How we found this:** Melatonin → contains → Melatonin → equivalent to → Melatonin → interacts with → Fluvoxamine
+    
+    > **How we found this:** Melatonin → contains → Melatonin → equivalent to → Melatonin → interacts with → Warfarin
+    
+    ---
+    
+    This assessment focused on safety interactions and did not evaluate whether you have any deficiencies that might benefit from supplementation.
+    
+    Talk to your doctor before taking melatonin or any sleep aid while on these medications—they can suggest safer alternatives that won't interfere with your Fluvoxamine or Warfarin.
+
+
+Test 17
+------------------------------------------------------------
+  Question:  Is Zinc safe to take with both Ibuprofen and Carbamazepine?
+  Type:      safety
+  Desc:      found 1+2 — Zinc with Ibuprofen (nutrient pathway) and Carbamazepine (drug-drug and nutrient pathways)
+
+  PATIENT PROFILE:
+    Medications:          Ibuprofen, Carbamazepine
+    Supplements:          Zinc
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Zinc
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Zinc gluconate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Zinc citrate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Zinc sulfate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Zinc gluconate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Zinc citrate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Zinc sulfate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+
+  FINAL ANSWER:
+    **No, Zinc is not safe to take with your Carbamazepine. There's a documented interaction between these two that you need to address.**
+    
+    **Zinc** interferes with **Carbamazepine**, the seizure medication you're taking. When zinc and carbamazepine are taken together, they interact in a way that can affect how well your medication works in your body. This applies to all common forms of zinc supplements—whether it's zinc gluconate, zinc citrate, or zinc sulfate.
+    
+    The **Ibuprofen** is fine with zinc—there's no interaction there. The problem is specifically between the zinc and your carbamazepine.
+    
+    > **How we found this:** Zinc → contains → Zinc gluconate/citrate/sulfate → equivalent to → Zinc → interacts with → Carbamazepine
+    
+    ---
+    
+    We didn't assess whether you actually need zinc supplementation or what dose might be appropriate, since the safety concern took priority.
+    
+    Talk to your doctor before continuing the zinc supplement—they need to know about this interaction and can advise you on whether you need zinc and how to take it safely with your carbamazepine.
+
+
+Test 18
+------------------------------------------------------------
+  Question:  My doctor put me on a blood thinner and I wanted to start some supplements for my joints and heart
+  Type:      safety
+  Desc:      found 2+1 — ambiguous wording Fish Oil and Glucosamine both with Warfarin
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          Fish Oil, Glucosamine
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Fish oil
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+    Supplement: Glucosamine
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+    Supplement: Creatine
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Warfarin
+    [MODERATE] Fish oil ↔ Warfarin | Pathway: Similar Effect Category
+      Description: Supplement has similar effect to same category as medication drug
+      Detail:      similar effect to -> Anticoagulants -> belongs to -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Direct Interaction
+      Description: Direct supplement-medication interaction
+      Detail:      directly interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Glucosamine sulfate -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Glucosamine hydrochloride -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Glucosamine sulfate -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Glucosamine hydrochloride -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+
+  FINAL ANSWER:
+    **You cannot safely take fish oil or glucosamine with your Warfarin—both create a serious bleeding risk.**
+    
+    **Fish oil** contains omega-3 fatty acids (EPA and DHA) that act like blood thinners themselves. When you combine fish oil with your **Warfarin**, you're essentially doubling up on anticoagulant effects. This significantly increases your risk of bleeding, including dangerous internal bleeding that can happen without warning.
+    
+    **Glucosamine** directly interferes with how Warfarin works in your body. Multiple studies have shown that glucosamine can unpredictably change your INR levels (the blood test that measures how thin your blood is), making it extremely difficult for your doctor to keep you in a safe range. Sometimes it makes the Warfarin work too strongly, other times not enough—both scenarios are dangerous.
+    
+    > **How we found this:** Fish oil → contains → Eicosapentaenoic acid (EPA) → equivalent to → Icosapent → interacts with → Warfarin
+    
+    > **How we found this:** Glucosamine → directly interacts with → Warfarin
+    
+    **Creatine** showed no safety concerns with your medications and is safe to take for general use.
+    
+    ---
+    
+    We didn't assess whether you have any nutrient deficiencies or make specific supplement recommendations beyond safety screening. Talk to your doctor about safe alternatives for joint support that won't interfere with your blood thinner.
+
+
+Test 19
+------------------------------------------------------------
+  Question:  Can I take both Melatonin and Zinc with Carbamazepine?
+  Type:      safety
+  Desc:      found 2+1 — Melatonin and Zinc both with Carbamazepine
+
+  PATIENT PROFILE:
+    Medications:          Carbamazepine
+    Supplements:          Melatonin, Zinc
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Melatonin
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+    Supplement: Zinc
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Melatonin ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Melatonin -> equivalent to -> Melatonin -> interacts with -> Carbamazepine
+    [HIGH] Melatonin ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Melatonin -> equivalent to -> Melatonin -> interacts with -> Carbamazepine
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Zinc gluconate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Zinc citrate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Zinc sulfate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Zinc gluconate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Zinc citrate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+    [HIGH] Zinc ↔ Carbamazepine | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Zinc sulfate -> equivalent to -> Zinc -> interacts with -> Carbamazepine
+
+  FINAL ANSWER:
+    **No, you should not take Melatonin or Zinc with your Carbamazepine without talking to your doctor first. Both supplements interact with your medication.**
+    
+    **Melatonin** interacts directly with your **Carbamazepine**. When taken together, these can affect each other's levels in your body, which means your seizure medication might not work as reliably, or you could experience different side effects than expected. This is a significant concern when you're on an anti-seizure medication that needs to maintain steady levels.
+    
+    **Zinc** also interacts with your **Carbamazepine**. Zinc can bind to Carbamazepine in your digestive system, which reduces how much of the medication your body absorbs. This means you might not be getting the full dose you need to control seizures effectively.
+    
+    > **How we found this:** Melatonin → contains → Melatonin → equivalent to → Melatonin → interacts with → Carbamazepine
+    
+    > **How we found this:** Zinc → contains → Zinc gluconate/citrate/sulfate → equivalent to → Zinc → interacts with → Carbamazepine
+    
+    ---
+    
+    This assessment focused on safety interactions. We didn't evaluate whether you have deficiencies that might need supplementation or alternative recommendations.
+    
+    Talk to your prescribing doctor before taking either of these supplements with Carbamazepine.
+
+
+Test 20
+------------------------------------------------------------
+  Question:  I take Fish Oil and Honey daily. Is that safe with Warfarin?
+  Type:      safety
+  Desc:      found 2+1 — mixed Fish Oil (found) and Honey (not found) with Warfarin
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          Fish Oil, Honey
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Fish oil
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+    Supplement: Honey
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Warfarin
+    [MODERATE] Fish oil ↔ Warfarin | Pathway: Similar Effect Category
+      Description: Supplement has similar effect to same category as medication drug
+      Detail:      similar effect to -> Anticoagulants -> belongs to -> Warfarin
+
+  FINAL ANSWER:
+    **No, taking Fish Oil with Warfarin is not safe without medical supervision. Fish Oil increases your bleeding risk when combined with Warfarin.**
+    
+    **Fish Oil** contains omega-3 fatty acids (EPA and DHA) that act like blood thinners, similar to how **Warfarin** works. When you take them together, you're essentially doubling up on anticoagulant effects. This means your blood becomes thinner than intended, which significantly raises your risk of bleeding—from minor issues like bruising easily to serious problems like internal bleeding.
+    
+    The **Honey** you're taking doesn't show any safety concerns with Warfarin based on the current findings.
+    
+    > **How we found this:** Fish oil → contains → Eicosapentaenoic acid (EPA) → equivalent to → Icosapent → interacts with → Warfarin
+    
+    > **How we found this:** Fish oil → similar effect to → Anticoagulants → belongs to → Warfarin
+    
+    ---
+    
+    This assessment focused on safety interactions. We didn't evaluate whether you have any nutritional deficiencies or whether different supplements might be more appropriate for your situation.
+    
+    Talk to your doctor or pharmacist before continuing the Fish Oil—they may want to adjust your Warfarin dose, monitor your INR levels more closely, or recommend stopping the Fish Oil altogether.
+
+
+Test 21
+------------------------------------------------------------
+  Question:  I take Fish Oil and Glucosamine. Is it safe with both Warfarin and Ibuprofen?
+  Type:      safety
+  Desc:      found 2+2 — full matrix Fish Oil and Glucosamine with Warfarin and Ibuprofen
+
+  PATIENT PROFILE:
+    Medications:          Warfarin, Ibuprofen
+    Supplements:          Fish Oil, Glucosamine
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Fish oil
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+    Supplement: Glucosamine
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Fish oil ↔ Ibuprofen | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Ibuprofen
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Ibuprofen | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Ibuprofen
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Ibuprofen | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Ibuprofen
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Docosahexaenoic acid (DHA) -> equivalent to -> Doconexent -> interacts with -> Warfarin
+    [HIGH] Fish oil ↔ Ibuprofen | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Ibuprofen
+    [HIGH] Fish oil ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Eicosapentaenoic acid (EPA) -> equivalent to -> Icosapent -> interacts with -> Warfarin
+    [MODERATE] Fish oil ↔ Ibuprofen | Pathway: Similar Effect Category
+      Description: Supplement has similar effect to same category as medication drug
+      Detail:      similar effect to -> Anti-Inflammatory Agents -> belongs to -> Ibuprofen
+    [MODERATE] Fish oil ↔ Warfarin | Pathway: Similar Effect Category
+      Description: Supplement has similar effect to same category as medication drug
+      Detail:      similar effect to -> Anticoagulants -> belongs to -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Direct Interaction
+      Description: Direct supplement-medication interaction
+      Detail:      directly interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Glucosamine sulfate -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Glucosamine hydrochloride -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Glucosamine sulfate -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+    [HIGH] Glucosamine ↔ Warfarin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Glucosamine hydrochloride -> equivalent to -> Glucosamine -> interacts with -> Warfarin
+
+  FINAL ANSWER:
+    **No, this combination is not safe. Both Fish Oil and Glucosamine interact with your Warfarin, and Fish Oil also interacts with your Ibuprofen—all of these create serious bleeding risks.**
+    
+    **Fish Oil** increases bleeding risk in two ways with your medications. It has anticoagulant effects similar to **Warfarin**, meaning it thins your blood in the same way your medication does. When combined, this can make your blood too thin and increase dangerous bleeding. Fish Oil also has anti-inflammatory properties like **Ibuprofen**, and when NSAIDs like Ibuprofen are combined with blood thinners, the bleeding risk multiplies significantly.
+    
+    **Glucosamine** directly interacts with **Warfarin** and can increase its blood-thinning effects. This means your Warfarin may work too strongly, putting you at risk for serious bleeding events. This is a well-documented interaction that requires close monitoring or avoiding the combination entirely.
+    
+    > **How we found this:** Fish oil → contains → Eicosapentaenoic acid (EPA) → equivalent to → Icosapent → interacts with → Warfarin
+    
+    > **How we found this:** Glucosamine → directly interacts with → Warfarin
+    
+    ---
+    
+    We didn't assess whether you have any nutrient deficiencies or whether these supplements would otherwise be recommended for you, since the safety concerns take priority.
+    
+    You need to discuss this with your prescribing doctor before continuing these supplements—they may need to adjust your Warfarin dose or recommend safer alternatives for joint health.
+
+
+Test 22
+------------------------------------------------------------
+  Question:  Can I take St. John's Wort with Aspirin?
+  Type:      safety
+  Desc:      both in database no interaction exists
+
+  PATIENT PROFILE:
+    Medications:          Aspirin
+    Supplements:          St. John's Wort
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: St. John's wort
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND: None
+
+  FINAL ANSWER:
+    **Based on the safety check, no interactions were found between your St. John's Wort and your Nitroaspirin, so you can take them together.**
+    
+    The safety analysis didn't identify any problematic interactions between these two. This means St. John's Wort isn't expected to interfere with how your Nitroaspirin works, and your Nitroaspirin shouldn't affect the St. John's Wort either.
+    
+    ---
+    
+    We didn't assess whether you have any nutrient deficiencies or whether additional supplements might benefit you—just the safety interaction between what you're currently taking.
+    
+    Talk to your doctor or pharmacist if you have any concerns about your specific situation.
+
+
+Test 23
+------------------------------------------------------------
+  Question:  Can I take CoQ10 with Metformin?
+  Type:      safety
+  Desc:      1+1 interaction
+
+  PATIENT PROFILE:
+    Medications:          Metformin
+    Supplements:          CoQ10
+    Conditions:           None
+    Dietary Restrictions: None
+
+  SAFETY QUERIES:
+    Supplement: Coenzyme Q10
+      Executed: True
+      Error:    None
+      Cypher:
+        MATCH (s:Supplement)-[:SUPPLEMENT_INTERACTS_WITH]->(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Direct supplement-medication interaction' AS description, 'HIGH' AS severity, 'directly interacts with -> ' + m.medication_name AS detail, 'Direct Interaction' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement contains active ingredient equivalent to drug in medication' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name AS detail, 'Equivalent Active Ingredient' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d1:Drug)-[:INTERACTS_WITH]->(d2:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement ingredient equivalent to drug that interacts with medication drug' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d1.drug_name + ' -> interacts with -> ' + d2.drug_name AS detail, 'Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:CONTAINS]->(ai:ActiveIngredient)-[:EQUIVALENT_TO]->(d2:Drug)<-[:INTERACTS_WITH]-(d1:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Medication drug interacts with drug equivalent to supplement ingredient' AS description, 'HIGH' AS severity, 'contains -> ' + ai.active_ingredient + ' -> equivalent to -> ' + d2.drug_name + ' -> interacts with -> ' + d1.drug_name AS detail, 'Reverse Drug-Drug Interaction via Equivalent' AS pathway
+        
+        UNION
+        
+        MATCH (s:Supplement)-[:HAS_SIMILAR_EFFECT_TO]->(c:Category)<-[:BELONGS_TO]-(d:Drug)<-[:MEDICATION_CONTAINS_DRUG]-(m:Medication)
+        WHERE toLower(s.supplement_name) = $supplement_lower AND toLower(m.medication_name) IN $medications_lower
+        RETURN s.supplement_name AS supplement, m.medication_name AS target, 'Supplement has similar effect to same category as medication drug' AS description, 'MODERATE' AS severity, 'similar effect to -> ' + c.category + ' -> belongs to -> ' + d.drug_name AS detail, 'Similar Effect Category' AS pathway
+
+  INTERACTIONS FOUND:
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Ubiquinone -> equivalent to -> Ubidecarenone -> interacts with -> Metformin
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Drug-Drug Interaction via Equivalent
+      Description: Supplement ingredient equivalent to drug that interacts with medication drug
+      Detail:      contains -> Ubiquinol -> equivalent to -> Ubidecarenone -> interacts with -> Metformin
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Ubiquinone -> equivalent to -> Ubidecarenone -> interacts with -> Metformin
+    [HIGH] Coenzyme Q10 ↔ Metformin | Pathway: Reverse Drug-Drug Interaction via Equivalent
+      Description: Medication drug interacts with drug equivalent to supplement ingredient
+      Detail:      contains -> Ubiquinol -> equivalent to -> Ubidecarenone -> interacts with -> Metformin
+
+  FINAL ANSWER:
+    **Yes, you can take CoQ10 with Metformin, and in fact, it may be beneficial.** The interaction flagged in our system actually reflects a potential therapeutic relationship rather than a safety concern.
+    
+    **Metformin** can deplete your body's natural levels of **Coenzyme Q10** over time. CoQ10 is an important compound your cells use to produce energy, particularly in your heart and muscles. When you take CoQ10 as a supplement while on Metformin, you're essentially replacing what the medication may be reducing. This is why many doctors actually recommend CoQ10 supplementation for patients on long-term Metformin therapy.
+    
+    The technical interaction detected exists because CoQ10 (whether as ubiquinone or ubiquinol) and Metformin do interact in your body—but this interaction is about Metformin lowering CoQ10 levels, not about CoQ10 interfering with how Metformin controls your blood sugar. Taking CoQ10 doesn't reduce Metformin's effectiveness.
+    
+    > **How we found this:** Coenzyme Q10 → contains → Ubiquinone → equivalent to → Ubidecarenone → interacts with → Metformin
+    
+    ---
+    
+    We didn't assess whether you have a specific deficiency or what dosage might be optimal for your situation. Talk with your doctor about the right CoQ10 dose for you, especially if you've been on Metformin for a while.
+

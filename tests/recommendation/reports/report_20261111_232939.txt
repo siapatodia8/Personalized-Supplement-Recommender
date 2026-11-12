@@ -1,0 +1,521 @@
+================================================================================
+TEST REPORT — Recommendation Tests (Human Review)
+================================================================================
+Dataset: golden_dataset_recommendation
+Total Tests: 15
+
+================================================================================
+TEST RESULTS
+================================================================================
+
+Test 1
+------------------------------------------------------------
+  Question:  What supplements are popular right now?
+  Type:      recommendation
+  Desc:      EDGE — no_conditions: Tests early exit when conditions_list is empty
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           None
+    Dietary Restrictions: Vegan
+
+  CONDITIONS CHECKED: None
+
+  CANDIDATE SUPPLEMENTS: None found
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **I can't give you a meaningful answer about what supplements are popular right now because that's not how I assess supplements—I look at what's safe and appropriate for your specific situation, not what's trending.**
+    
+    The findings system didn't identify any supplements to analyze, so there's nothing for me to evaluate in terms of safety or interactions. "Popular" isn't a useful criterion for choosing supplements anyway. What matters is whether you actually need something based on your diet, health conditions, and medications.
+    
+    Since you're vegan, you're at higher risk for certain nutritional gaps—**vitamin B12**, **vitamin D**, **omega-3s** (EPA/DHA), **iron**, and potentially **zinc** and **iodine**. These aren't popular supplements; they're the ones vegans commonly need because plant-based diets don't provide them in adequate amounts or in forms your body absorbs well.
+    
+    ---
+    
+    The analysis didn't assess whether you have any deficiencies or what supplements would actually benefit you specifically.
+    
+    Talk to your doctor about getting bloodwork done to see what you actually need rather than following trends.
+
+
+Test 2
+------------------------------------------------------------
+  Question:  What supplements can help with my diabetes?
+  Type:      recommendation
+  Desc:      EXACT_MATCH — DB has 3 supplements for Diabetes
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Diabetes
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Diabetes
+
+  CANDIDATE SUPPLEMENTS:
+    Coenzyme Q10 — safety_rating: Generally safe | treats: Diabetes
+    Flaxseed and flaxseed oil — safety_rating: Generally safe | treats: Diabetes
+    Milk thistle — safety_rating: Generally safe | treats: Diabetes
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **Based on the safety data, Coenzyme Q10, flaxseed and flaxseed oil, and milk thistle are all generally safe options for diabetes.**
+    
+    All three of these supplements have been reviewed for use in people with diabetes and carry a "generally safe" rating. **Coenzyme Q10** is an antioxidant that your body naturally produces, and supplementing it appears safe for diabetics. **Flaxseed and flaxseed oil** provide omega-3 fatty acids and fiber, and they're considered safe for your condition. **Milk thistle**, often used for liver support, also has a generally safe profile when you have diabetes.
+    
+    However, I need to point out something important: you didn't mention any diabetes medications. If you're taking metformin, insulin, or any other diabetes drugs, I need to know that to check for interactions. Supplements can affect how your medications work or how your blood sugar responds, so the complete picture matters.
+    
+    ---
+    
+    I wasn't able to assess whether you have any nutrient deficiencies that might need addressing, as that requires additional information about your specific diabetes management and lab work.
+    
+    Talk to your doctor before starting any of these supplements, especially to discuss how they might affect your blood sugar control and any medications you may be taking.
+
+
+Test 3
+------------------------------------------------------------
+  Question:  What can help with my depression?
+  Type:      recommendation
+  Desc:      EXACT_MATCH — DB has 4 supplements for Depression. Tests safety_rating sorting
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Depression
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Depression
+
+  CANDIDATE SUPPLEMENTS:
+    Folate (folic acid) — safety_rating: Generally safe | treats: Depression
+    SAMe — safety_rating: Generally safe | treats: Depression
+    St. John's wort — safety_rating: Use with caution | treats: Depression
+    DHEA — safety_rating: Not recommended | treats: Depression
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **Several supplements show promise for depression, with folate and SAMe being the safest options to consider, while St. John's wort requires caution and DHEA isn't recommended.**
+    
+    **Folate (folic acid)** and **SAMe** are both generally safe supplements that have evidence supporting their use for depression. Folate is a B vitamin that plays a role in brain chemistry and mood regulation, and it's particularly helpful if you have low folate levels. SAMe is a compound your body makes naturally that's involved in producing neurotransmitters like serotonin and dopamine.
+    
+    **St. John's wort** has some evidence for depression but comes with a "use with caution" rating. This herb can interact with many medications, so if you start taking any prescriptions in the future, you'll need to inform your doctor that you're using it.
+    
+    **DHEA** is not recommended for depression despite being marketed for mood support. The evidence doesn't support its use for this condition, and it can have hormonal effects that may cause other problems.
+    
+    ---
+    
+    Since you're not currently taking any medications or supplements, I wasn't able to check for specific drug interactions, but this will be important if you start any prescriptions later.
+    
+    Talk to your healthcare provider about these options, especially since depression often benefits from a comprehensive treatment approach that may include therapy, lifestyle changes, or prescription medications alongside or instead of supplements.
+
+
+Test 4
+------------------------------------------------------------
+  Question:  I have acne. Any supplement suggestions?
+  Type:      recommendation
+  Desc:      EXACT_MATCH — DB has 3 supplements for Acne
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Acne
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Acne
+
+  CANDIDATE SUPPLEMENTS:
+    Aloe — safety_rating: Generally safe | treats: Acne
+    Tea tree oil — safety_rating: Generally safe | treats: Acne
+    Vitamin A — safety_rating: Use with caution | treats: Acne
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **For acne, you have three supplement options to consider: aloe and tea tree oil are generally safe, while vitamin A should be used with caution.**
+    
+    **Aloe** and **tea tree oil** are both generally safe options for treating acne. These are topical treatments that you can apply directly to affected areas without significant safety concerns.
+    
+    **Vitamin A** can help with acne, but you need to be more careful with it. The "use with caution" rating means there are potential risks or side effects you should be aware of before starting it. High doses of vitamin A can cause problems, so if you go this route, stick to recommended doses and don't overdo it.
+    
+    Since you're not taking any medications, we don't have to worry about drug interactions, which simplifies things. You have a clean slate to try these options.
+    
+    ---
+    
+    I wasn't able to assess whether you have any nutritional deficiencies that might be contributing to your acne, since that analysis wasn't run.
+    
+    Talk to your healthcare provider before starting any new supplement, especially the vitamin A, to make sure you're using the right form and dose for your situation.
+
+
+Test 5
+------------------------------------------------------------
+  Question:  What supplements might help with general brain fog?
+  Type:      recommendation
+  Desc:      KEYWORD_FALLBACK — BROAD_QUERY splits keywords and matches on brain-related symptoms
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Brain Fog
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Brain Fog
+
+  CANDIDATE SUPPLEMENTS:
+    Creatine — safety_rating: Generally safe | treats: Cognition and brain health
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **Creatine is a supplement that may help with brain fog and is generally safe for you to take.**
+    
+    Creatine isn't just for muscles—it also supports brain energy. Your brain cells use creatine to maintain their energy reserves, which helps with mental clarity, focus, and cognitive function. When brain energy is optimized, many people experience less fog and better mental performance.
+    
+    Since you're not taking any medications, there are no interaction concerns to worry about. **Creatine** has a 'generally safe' rating for cognition and brain health, making it a reasonable option to consider for your brain fog.
+    
+    ---
+    
+    I wasn't able to assess whether you have any nutritional deficiencies that might be contributing to your brain fog, since that specialist didn't run. It's worth mentioning this symptom to your healthcare provider to rule out underlying causes like thyroid issues, sleep problems, or vitamin deficiencies that might need attention beyond supplementation.
+
+
+Test 6
+------------------------------------------------------------
+  Question:  Any supplements for xylophoria?
+  Type:      recommendation
+  Desc:      NOT_FOUND — fabricated condition with no DB match
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Xylophoria
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Xylophoria
+
+  CANDIDATE SUPPLEMENTS: None found
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **I don't have any supplement recommendations for xylophoria because I couldn't find evidence-based options for this condition in my database.**
+    
+    Without established supplement candidates for xylophoria, I can't give you specific guidance on what might help. This either means the condition doesn't have well-studied supplement interventions, or it may be a term I'm not recognizing in my current medical references.
+    
+    ---
+    
+    I wasn't able to run a full safety check since you're not currently taking any medications or supplements. I also couldn't assess for nutritional deficiencies without information about your diet.
+    
+    Talk to your doctor about xylophoria specifically — they can clarify the diagnosis and discuss whether any supplements might be appropriate for your situation.
+
+
+Test 7
+------------------------------------------------------------
+  Question:  I already take Fish Oil. What else could help with heart disease?
+  Type:      recommendation
+  Desc:      EXCLUDE_CURRENT — Fish Oil excluded from heart disease results. Expect 2 candidates
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          Fish Oil
+    Conditions:           Heart Disease
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Heart Disease
+
+  CANDIDATE SUPPLEMENTS:
+    Flaxseed and flaxseed oil — safety_rating: Generally safe | treats: Heart disease
+    Vitamin A — safety_rating: Use with caution | treats: Heart disease
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **Flaxseed or flaxseed oil would be a good option to add to your fish oil for heart disease. Vitamin A is another possibility, but you'd need to use it more carefully.**
+    
+    **Flaxseed and flaxseed oil** are generally safe for heart disease. They work similarly to fish oil by providing omega-3 fatty acids that support heart health, so they complement what you're already taking.
+    
+    **Vitamin A** can also be used for heart disease, but it requires more caution. The safety profile isn't as straightforward as flaxseed, so if you're considering this one, you'll want closer monitoring.
+    
+    Since you're not taking any medications right now, we couldn't check for drug interactions with your fish oil or these other supplements. That's actually good news—it means there are no medication conflicts to worry about at the moment.
+    
+    ---
+    
+    We didn't assess whether you have any vitamin or mineral deficiencies, since that wasn't part of this review.
+    
+    Talk to your doctor about adding flaxseed or vitamin A to make sure either option fits with your overall heart disease management plan.
+
+
+Test 8
+------------------------------------------------------------
+  Question:  I have diabetes and depression. What supplements might help?
+  Type:      recommendation
+  Desc:      MULTI_CONDITION — Diabetes(3) + Depression(4). Tests dedup and sorting
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Diabetes, Depression
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Diabetes, Depression
+
+  CANDIDATE SUPPLEMENTS:
+    Coenzyme Q10 — safety_rating: Generally safe | treats: Diabetes
+    Flaxseed and flaxseed oil — safety_rating: Generally safe | treats: Diabetes
+    Milk thistle — safety_rating: Generally safe | treats: Diabetes
+    Folate (folic acid) — safety_rating: Generally safe | treats: Depression
+    SAMe — safety_rating: Generally safe | treats: Depression
+    St. John's wort — safety_rating: Use with caution | treats: Depression
+    DHEA — safety_rating: Not recommended | treats: Depression
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **Several supplements show promise for diabetes and depression, but you'll want to approach them strategically — some are generally safe while others require caution or should be avoided.**
+    
+    For your diabetes, **Coenzyme Q10**, **flaxseed and flaxseed oil**, and **milk thistle** are all generally safe options that people with diabetes commonly use. These have good safety profiles for your condition.
+    
+    For your depression, **folate (folic acid)** and **SAMe** are generally safe choices. **St. John's wort** requires caution — it can interact with many medications if you start any in the future, and it's not appropriate for everyone with depression. **DHEA** is not recommended for depression, so I'd steer clear of that one.
+    
+    Since you're not currently taking any medications, I couldn't check for drug interactions. This is important because if you start diabetes medications, antidepressants, or anything else down the line, some of these supplements could interfere with how those drugs work.
+    
+    ---
+    
+    I wasn't able to assess whether you have any nutritional deficiencies that might be contributing to your symptoms, as that requires lab work and a more detailed evaluation.
+    
+    Talk with your doctor before starting any of these — they can help you choose what makes sense for your specific situation and monitor how you respond.
+
+
+Test 9
+------------------------------------------------------------
+  Question:  What can help with my constipation? I take Warfarin.
+  Type:      recommendation
+  Desc:      REC_SAFETY — Aloe flagged dangerous with Warfarin. Flaxseed approved. Tests rec→safety pipeline
+
+  PATIENT PROFILE:
+    Medications:          Warfarin
+    Supplements:          None
+    Conditions:           Constipation
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Constipation
+
+  CANDIDATE SUPPLEMENTS:
+    Aloe — safety_rating: Generally safe | treats: Constipation
+    Flaxseed and flaxseed oil — safety_rating: Generally safe | treats: Constipation
+
+  SAFETY INTERACTIONS (post-recommendation):
+    [HIGH] Aloe ↔ Warfarin | Pathway: Direct Interaction
+
+  FINAL ANSWER:
+    **For constipation while taking Warfarin, flaxseed or flaxseed oil is a safe option. Avoid aloe — it interacts directly with your Warfarin.**
+    
+    **Flaxseed and flaxseed oil** are generally safe for constipation and don't interfere with your **Warfarin**. They work by adding bulk and moisture to your stool, making it easier to pass.
+    
+    **Aloe** is also generally safe for constipation, but there's a problem: it directly interacts with your Warfarin. This interaction can affect how your Warfarin works in your body, which is dangerous because Warfarin needs to stay at very precise levels to prevent blood clots without causing bleeding.
+    
+    > **How we found this:** Aloe → [Direct Interaction] → directly interacts with -> Warfarin → Warfarin
+    
+    ---
+    
+    We didn't assess whether you have any nutrient deficiencies that might be contributing to your constipation. Talk to your doctor about the flaxseed option and to make sure there isn't an underlying cause for your constipation that needs attention.
+
+
+Test 10
+------------------------------------------------------------
+  Question:  I have osteoporosis and take Calcium already.
+  Type:      recommendation
+  Desc:      EXCLUDE_PLUS — Osteoporosis(2 recs). Tests exclude logic
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          Calcium
+    Conditions:           Osteoporosis
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Osteoporosis
+
+  CANDIDATE SUPPLEMENTS:
+    Vitamin D — safety_rating: Generally safe | treats: Osteoporosis
+    DHEA — safety_rating: Not recommended | treats: Osteoporosis
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **Calcium is a good start for osteoporosis, but you're missing a critical partner: Vitamin D. Without it, your body can't properly absorb the calcium you're taking.**
+    
+    **Vitamin D** is generally safe for osteoporosis and works hand-in-hand with calcium. Think of calcium as the building material for your bones and vitamin D as the construction crew that actually gets it into place. Taking calcium alone means much of it passes through your system without being used.
+    
+    You should avoid **DHEA** for osteoporosis—it's not recommended for your condition based on the safety data.
+    
+    ---
+    
+    I wasn't able to check for interactions between your calcium and any medications since you didn't list current medications. If you're taking any prescription drugs, over-the-counter medications, or other supplements, we'd need to review those together to ensure everything is safe to combine.
+    
+    Talk to your doctor about adding vitamin D to your regimen and confirming the right doses for both supplements.
+
+
+Test 11
+------------------------------------------------------------
+  Question:  What supplements can help with my joint pain?
+  Type:      recommendation
+  Desc:      POOR_MATCH — joint pain not exact symptom. Keyword fallback on pain returns Marijuana and Evening primrose (breast pain) — not joint-specific. KG coverage gap
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Joint Pain
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Joint Pain
+
+  CANDIDATE SUPPLEMENTS:
+    Evening primrose — safety_rating: Use with caution | treats: Breast pain
+    Marijuana — safety_rating: Use with caution | treats: Pain
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **For joint pain, I don't have strong supplement recommendations from the safety database — the only options flagged require caution and aren't specifically for joints.**
+    
+    The findings mention **evening primrose** and **marijuana**, but both come with "use with caution" ratings and aren't targeted at joint pain. Evening primrose is noted for breast pain, and marijuana for general pain, but neither has been identified here as a safe, evidence-based choice specifically for your joint condition.
+    
+    Since you're not taking any medications, we couldn't check for drug interactions — that's actually good news in terms of safety risks. However, it also means the recommendation system had limited data to work with for your specific situation.
+    
+    ---
+    
+    The deficiency specialist didn't run, so we haven't assessed whether any nutritional gaps might be contributing to your joint pain. The safety specialist was skipped since you're not currently on medications or supplements.
+    
+    Talk to your doctor about joint-specific options like glucosamine, omega-3s, or other approaches that might have better evidence for your condition.
+
+
+Test 12
+------------------------------------------------------------
+  Question:  I have chronic inflammation. What should I take?
+  Type:      recommendation
+  Desc:      VAGUE_BROAD — inflammation is broad. Keyword fallback may return loosely matched or irrelevant supplements
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Inflammation
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Inflammation, chronic inflammation
+
+  CANDIDATE SUPPLEMENTS: None found
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **I don't have enough information to recommend specific supplements for your chronic inflammation.**
+    
+    The system searched for supplements that could help with inflammation and chronic inflammation, but didn't find any matches in its database for these conditions. This doesn't mean supplements can't help — it means I need more details about what's causing your inflammation to give you a safe, specific recommendation.
+    
+    Chronic inflammation can stem from many different sources: autoimmune conditions, injuries, metabolic issues, or lifestyle factors. The right supplement depends entirely on the underlying cause. For example, inflammation from rheumatoid arthritis requires a different approach than inflammation from metabolic syndrome or a sports injury.
+    
+    **You mentioned you're not taking any medications, which is helpful to know** — it means we won't have to worry about supplement-drug interactions once we identify what might help you. But first, we need to pinpoint what's driving your inflammation.
+    
+    ---
+    
+    The safety check was skipped since you're not currently taking any supplements or medications to analyze for interactions.
+    
+    Talk to your doctor about what's causing your chronic inflammation so we can identify supplements that target your specific situation safely.
+
+
+Test 13
+------------------------------------------------------------
+  Question:  What supplements help with general fatigue?
+  Type:      recommendation
+  Desc:      VAGUE_BROAD — fatigue is common but vague. Tests keyword fallback quality for non-specific symptoms
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Fatigue
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Fatigue, general fatigue
+
+  CANDIDATE SUPPLEMENTS: None found
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **I don't have specific supplement recommendations for your fatigue because the analysis didn't identify any supplement candidates for general fatigue.**
+    
+    Fatigue has many possible causes — from sleep issues and stress to underlying medical conditions like thyroid problems, anemia, or vitamin deficiencies. Without knowing the root cause of your fatigue, I can't point you toward supplements that would actually help.
+    
+    The smart first step is getting basic blood work done. Your doctor can check for common culprits like iron deficiency, vitamin B12 deficiency, vitamin D levels, and thyroid function. If any of these come back low, then targeted supplementation makes sense and will actually address the problem.
+    
+    ---
+    
+    The safety check couldn't run because you're not currently taking any medications or supplements.
+    
+    Talk to your doctor about investigating what's causing your fatigue before starting any supplements — treating the right problem gets you better results.
+
+
+Test 14
+------------------------------------------------------------
+  Question:  Can you recommend something for my headaches?
+  Type:      recommendation
+  Desc:      POOR_MATCH — headaches may lack direct TREATS edges. Tests common condition users ask about
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Headaches
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Headaches
+
+  CANDIDATE SUPPLEMENTS: None found
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **I don't have a specific supplement recommendation for your headaches based on the information available.**
+    
+    Our recommendation system didn't identify supplement candidates with sufficient evidence for headache management. This doesn't mean supplements can't help — it means I need more information to give you safe, personalized guidance.
+    
+    Headaches have many different causes, and the right approach depends on what's triggering yours. Some people benefit from magnesium if they have migraines, others from riboflavin or CoQ10, but without knowing your headache pattern, frequency, and triggers, I can't point you in the right direction.
+    
+    ---
+    
+    I wasn't able to run a full safety check since you're not currently taking any medications or supplements. If you do decide to try something, make sure to discuss it with your healthcare provider first, especially if you start any new medications in the future.
+
+
+Test 15
+------------------------------------------------------------
+  Question:  What supplements help with sleep and anxiety?
+  Type:      recommendation
+  Desc:      MULTI_VAGUE — two vague conditions that may not have exact matches. Tests graceful handling of uncertain inputs
+
+  PATIENT PROFILE:
+    Medications:          None
+    Supplements:          None
+    Conditions:           Sleep Issues, Anxiety
+    Dietary Restrictions: None
+
+  CONDITIONS CHECKED: Sleep Issues, Anxiety, sleep
+
+  CANDIDATE SUPPLEMENTS:
+    Melatonin — safety_rating: Generally safe | treats: Circadian rhythm sleep disorders in the blind
+
+  SAFETY INTERACTIONS (post-recommendation): None
+
+  FINAL ANSWER:
+    **Melatonin is the supplement with evidence for sleep issues, though the research specifically looked at people who are blind with circadian rhythm problems.**
+    
+    **Melatonin** has a safety rating of "generally safe" for treating circadian rhythm sleep disorders in blind individuals. This is a specific condition where people can't use light cues to regulate their sleep-wake cycle. The findings don't include evidence for general insomnia or anxiety-related sleep problems, but melatonin works by signaling to your brain that it's time to sleep, which is why it's commonly used for various sleep issues.
+    
+    I don't have information in these findings about supplements specifically for anxiety, or about other sleep supplements like magnesium, L-theanine, or valerian that people often ask about.
+    
+    ---
+    
+    I wasn't able to check for interactions with medications since you're not currently taking any. I also couldn't assess whether you have any nutrient deficiencies that might be contributing to your sleep or anxiety issues.
+    
+    Talk to your doctor about whether melatonin or other options make sense for your specific type of sleep problem and anxiety.
+

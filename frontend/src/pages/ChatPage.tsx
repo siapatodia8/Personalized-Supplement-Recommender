@@ -165,14 +165,17 @@ export function ChatPage() {
                   },
                 ];
               });
-              } else if (data.type === "step_update") {
-              setThinkingSteps((prev) =>
-                prev.map((s) =>
-                  s.node === data.node
-                    ? { ...s, decision: data.decision }
-                    : s
-                )
-              );
+            } else if (data.type === "step_update") {
+              // The decision belongs to the supervisor run that just finished,
+              // which is the most recent step for that node. Updating every
+              // matching step would overwrite earlier supervisor decisions.
+              setThinkingSteps((prev) => {
+                const idx = prev.map((s) => s.node).lastIndexOf(data.node);
+                if (idx === -1) return prev;
+                const next = [...prev];
+                next[idx] = { ...next[idx], decision: data.decision };
+                return next;
+              });
             } else if (data.type === "result") {
               setThinkingSteps((prev) =>
                 prev.map((s) => ({ ...s, status: "completed" as const }))

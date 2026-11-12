@@ -4,15 +4,13 @@ Graph Builder - LangGraph Workflow Construction
 Builds the agentic workflow using LangGraph.
 Defines nodes, edges, and entry point.
 
-Current phase: Full pipeline active.
+Pipeline:
   entity_extractor → entity_normalizer → supervisor →
   [safety_check | deficiency_check | recommendation] → supervisor (loop) →
   synthesis → END
-
-Synthesis node is the only remaining placeholder.
 """
 
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph, END  # END is LangGraph's own end marker (NodeNames has no END)
 
 from src.workflow.state import ConversationState, InputState
 from src.workflow.routing import NodeNames, route_supervisor_decision
@@ -32,7 +30,7 @@ def build_workflow():
     Active nodes:
         entity_extractor → entity_normalizer → supervisor →
         [safety_check | deficiency_check | recommendation] → supervisor (loop) →
-        synthesis → END  (synthesis still placeholder → END)
+        synthesis → END
 
     Returns:Compiled LangGraph workflow
     """
@@ -40,7 +38,7 @@ def build_workflow():
 
     workflow = StateGraph(ConversationState, input=InputState)
 
-    # ==================== PHASE 1: NODES ====================
+    # ==================== NODES: PRE-PROCESSING, SUPERVISOR, SPECIALISTS ====================
 
     print(f"   Adding node: {NodeNames.ENTITY_EXTRACTOR}")
     workflow.add_node(NodeNames.ENTITY_EXTRACTOR, entity_extractor)
@@ -77,9 +75,9 @@ def build_workflow():
         NodeNames.SUPERVISOR,
         route_supervisor_decision,
         {
-            NodeNames.SAFETY_CHECK: NodeNames.SAFETY_CHECK,        # live
-            NodeNames.RECOMMENDATION: NodeNames.RECOMMENDATION,    # live
-            NodeNames.DEFICIENCY_CHECK: NodeNames.DEFICIENCY_CHECK, # live
+            NodeNames.SAFETY_CHECK: NodeNames.SAFETY_CHECK,
+            NodeNames.RECOMMENDATION: NodeNames.RECOMMENDATION,
+            NodeNames.DEFICIENCY_CHECK: NodeNames.DEFICIENCY_CHECK,
             NodeNames.SYNTHESIS: NodeNames.SYNTHESIS,
             # END: END,
             

@@ -3,9 +3,8 @@ Routing - Workflow Traffic Controller
 
 Maps supervisor decisions to node names.
 No intelligence here — pure string-to-node-name mapping.
-
-Current phase: No routing needed (linear pipeline only).
-Supervisor routing will be activated in Phase 2.
+This file turns the supervisor's decision, written in words, into the name of the step that runs next. 
+It's a lookup table with no thinking in it.
 """
 
 from typing import Any, Dict
@@ -31,12 +30,12 @@ class NodeNames:
     # Phase 3: Final output
     SYNTHESIS = "synthesis"
 
-    # LangGraph END sentinel
-    END = "END"
+    # END is not defined here. The workflow uses LangGraph's own END,
+    # imported in graph_builder.py (from langgraph.graph import StateGraph, END).
+    # END = "END"
 
 
 # ==================== SUPERVISOR ROUTING ====================
-# Activated in Phase 2 when supervisor is added.
 
 def route_supervisor_decision(state: Dict[str, Any]) -> str:
     """

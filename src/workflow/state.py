@@ -3,13 +3,9 @@ State Definition - Conversation State
 
 Defines the shared state that flows between all agents in the workflow.
 All agents read from and write to this state.
-
-Current phase: Entity Extraction + Normalization only.
-Supervisor, specialist, and synthesis fields are defined but
-will be populated in later phases.
 """
 
-from typing import TypedDict, List, Dict, Any, Optional, Annotated
+from typing import TypedDict, List, Dict, Any, Optional
 # from langgraph.graph import add_messages
 
 
@@ -115,7 +111,7 @@ class ConversationState(TypedDict):
     # messages: Annotated[List[Dict], add_messages]
     messages: List[Dict]
     """
-    Chat message history. LangGraph appends automatically via add_messages.
+    Chat message history, kept as a plain list (no automatic appending).
     Format: [{'role': 'user', 'content': '...'}, ...]
     """
 

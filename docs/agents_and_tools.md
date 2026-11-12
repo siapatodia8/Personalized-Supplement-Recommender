@@ -101,7 +101,7 @@
 
 **Three deficiency pathways:**
 1. **Diet** — `DietaryRestriction -[DEFICIENT_IN]-> Nutrient`
-2. **Medication** — `Drug -[INTERACTS_WITH_NUTRIENT]-> Nutrient` (maps `interaction_type` strings to risk levels: `depletes/antagonizes → HIGH`, `interferes_with_absorption/may_cause_loss → MEDIUM`, `redistributes → LOW`)
+2. **Medication** — `Drug -[INTERACTS_WITH_NUTRIENT]-> Nutrient` (maps `interaction_type` strings to risk levels: `depletes/antagonizes → HIGH`, `interferes_with_absorption/increases_level/may_cause_loss → MEDIUM`, `redistributes → LOW`)
 3. **Supplement** — `Supplement -[NEGATIVE_INTERACTION]-> Nutrient`
 
 **Overlap types:** `TRIPLE_OVERLAP` (all 3 sources), `DOUBLE_OVERLAP` (2 sources), `SINGLE_SOURCE_MULTIPLE`

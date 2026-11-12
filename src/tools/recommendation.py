@@ -6,14 +6,21 @@ Safety checking of candidates is handled separately by safety_check.py
 after the supervisor routes back through the loop.
 
 Query flow:
-1. SYMPTOM_QUERY  — find supplements via TREATS relationship (exact match)
-2. BROAD_QUERY    — fallback keyword search if no exact match
+1. SYMPTOM_QUERY  — find supplements via TREATS relationship (substring match on
+                    the symptom name, so "pain" also matches "back pain")
+2. BROAD_QUERY    — fallback keyword search if the first query finds nothing
+                    (any single word of the condition, capped at 10 results)
 
 Current supplements are excluded from candidates — no point recommending
 what the patient already takes.
 
 Reads from state : conditions_list, supplements_list
-Writes to state  : recommendations_checked, recommendation_results, evidence_chain
+Writes to state  : recommendations_checked, recommendation_results,
+                   candidate_supplements_list, evidence_chain
+                   (candidate_supplements_list is what safety_check.py reads)
+
+No LLM is used here: both queries are fixed Cypher with parameters, so the
+results are the same every run.
 """
 
 import logging
@@ -26,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 # ==================== CYPHER QUERIES ====================
 
-# Find supplements that treat a condition — exact symptom name match
+# Find supplements that treat a condition — substring match on the symptom name (CONTAINS)
 
 SYMPTOM_QUERY = """
 MATCH (s:Supplement)-[:TREATS]->(sym:Symptom)
@@ -39,7 +46,7 @@ RETURN DISTINCT
 ORDER BY s.supplement_name
 """
 
-# Fallback — search by individual keywords when exact match fails
+# Fallback — search by individual keywords when the first query finds nothing
 
 BROAD_QUERY = """
 MATCH (s:Supplement)-[:TREATS]->(sym:Symptom)
@@ -60,18 +67,19 @@ def _find_candidates(condition: str) -> List[Dict[str, Any]]:
     """
     Find supplements that treat the given condition.
 
-    Tries exact symptom match first, falls back to keyword search
-    if no results found.
+    Tries a substring match on the symptom name first, falls back to a
+    keyword search if no results are found (or the first query errors).
 
     Args:
         condition: Condition or symptom string from conditions_list
 
     Returns:
-        List of candidate dicts with supplement_name, safety_rating, symptom_treated
+        List of candidate dicts with supplement_id, supplement_name,
+        safety_rating, symptom_treated
     """
     condition_lower = condition.lower().strip()
 
-    # Primary: exact symptom name match
+    # Primary: substring match on the symptom name
     try:
         results = graph_interface.execute_query(
             SYMPTOM_QUERY,
@@ -110,7 +118,16 @@ def _build_results(
     conditions: List[str],
     medications: List[str]
 ) -> Dict[str, Any]:
+    """
+    Package candidates into the compact dict the supervisor and synthesis read.
 
+    status is 'found' or 'not_found'; the summary ends with "safety check
+    pending" because safety_check.py checks these candidates afterwards.
+
+    STALE CODE: the `medications` parameter is always passed as [] by
+    recommendation(), so 'entities_checked' holds conditions only. It was meant
+    for a medication cross-check, which now lives in safety_check.py.
+    """
     if not candidates:
         status = 'not_found'
         summary = f"No supplement candidates found for: {', '.join(conditions)}"
@@ -136,16 +153,22 @@ def _build_results(
 
 def recommendation(state: Dict[str, Any]) -> Dict[str, Any]:
     """
-    LangGraph node: Find and evaluate supplement recommendations.
+    LangGraph node: Find candidate supplements for the patient's conditions.
+
+    Only finds and ranks candidates; the safety check on them runs afterwards
+    in safety_check.py, once the supervisor routes there.
 
     Reads from state:
         - conditions_list: health conditions / symptoms from question + profile
-        - medications_list: patient's medications (for safety cross-check)
+        - medications_list: NOT read here. STALE: it was meant for a safety
+          cross-check, which now lives in safety_check.py
         - supplements_list: patient's current supplements (excluded from candidates)
 
     Writes to state:
         - recommendations_checked: True
         - recommendation_results: compact structured summary
+        - candidate_supplements_list: candidate names, read by safety_check.py
+          (not written on the no-conditions early exit; state default is [])
         - evidence_chain: appended with recommendation finding
 
     Args:
@@ -185,7 +208,7 @@ def recommendation(state: Dict[str, Any]) -> Dict[str, Any]:
     print(f"   Current supplements (excluded): "
           f"{current_supplements if current_supplements else 'none'}")
 
-    # ── Find and evaluate candidates for each condition ──
+    # ── Find candidates for each condition (skip duplicates and current supplements) ──
     seen_supplements: set = set()
     all_evaluated: List[Dict[str, Any]] = []
 
@@ -211,7 +234,7 @@ def recommendation(state: Dict[str, Any]) -> Dict[str, Any]:
             all_evaluated.append(candidate)
             print(f"      ✅ {name} (safety_rating: {candidate.get('safety_rating', 'unknown')})")
 
-    # ── Sort by safety_rating ──
+    # ── Sort by safety_rating (best first; unknown ratings rank like 'Not recommended') ──
     safety_rating_rank = {'Generally safe': 2, 'Use with caution': 1, 'Not recommended': 0}
     all_evaluated.sort(
         key=lambda r: safety_rating_rank.get(r.get('safety_rating', ''), 0),
@@ -219,6 +242,7 @@ def recommendation(state: Dict[str, Any]) -> Dict[str, Any]:
     )
 
     # ── Build compact results ──
+    # [] = medications: unused (STALE CODE, see _build_results)
     results = _build_results(all_evaluated, conditions, [])
 
     print(f"\n   {results['summary']}")

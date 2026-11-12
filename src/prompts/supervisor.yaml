@@ -25,7 +25,7 @@ decision: |
   ---
 
   Guidelines:
-  - First, summarize the patient's clinical and understand what the user is actually asking — questions may be ambiguous
+  - First, summarize the patient's clinical profile and understand what the user is actually asking — questions may be ambiguous
   - Decide which specialist(s) are relevant to answer this question fully given the patient's profile
   - Do NOT use prior biomedical knowledge to assume outcomes — let the specialists check the data
   - Do NOT repeat a specialist that has already run

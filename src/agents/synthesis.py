@@ -5,15 +5,18 @@ Consumes all specialist outputs in the ConversationState and produces a single
 patient-facing final answer.
 
 Design goals:
-- Grounded: use only the specialist result dicts + evidence_chain (no external biomedical knowledge)
-- Robust: if Claude API is unavailable, generate a deterministic fallback answer
-- Minimal state writes: sets final_answer and appends one evidence_chain entry
+- Grounded: use only the specialist result dicts, the normalizer's match results (to flag
+  unrecognized names) and the cleaned patient lists (no external biomedical knowledge)
+- Robust: if there is no API key, or the Claude call fails or returns nothing, generate a
+  deterministic fallback answer
+- Minimal state writes: sets final_answer and appends one evidence_chain entry; on the LLM
+  paths it also sets error_message to None (it is never set to an error message here)
 """
 
-import json
+import json  # STALE CODE: only used by the unused _safe_json below
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional  # STALE CODE: Optional is never used in this file
 
 from anthropic import Anthropic
 
@@ -22,6 +25,9 @@ from src.prompt_loader import load_prompt
 logger = logging.getLogger(__name__)
 
 
+# STALE CODE (unused): dumps any object to JSON text without raising. Nothing calls it; likely left
+# over from an earlier version that put raw results in the prompt (the prompt now gets the text
+# built by _build_findings_summary instead). Kept as is on purpose.
 def _safe_json(obj: Any) -> str:
     try:
         return json.dumps(obj, ensure_ascii=False, indent=2, default=str)
@@ -45,16 +51,24 @@ def _build_evidence_path(ix: Dict[str, Any]) -> str:
     """
     Build a readable arrow chain evidence path from a single interaction row.
 
-    Uses only the 6 fields returned by the safety check query:
-        supplement, target, pathway, detail (may be null)
+    The safety query (SAFETY_QUERY in src/tools/safety_check.py) returns 6 fields per row:
+    supplement, target, description, severity, detail, pathway. This function uses only 4 of
+    them: supplement, target, pathway and detail (detail may be null).
+
+    Pathway names come from SAFETY_QUERY: "Direct Interaction", "Equivalent Active Ingredient",
+    "Drug-Drug Interaction via Equivalent", "Reverse Drug-Drug Interaction via Equivalent" and
+    "Similar Effect Category". The detail text is built inside the query with "->" arrows
+    (e.g. "contains -> <ingredient> -> equivalent to -> <drug>"), while the arrows added here
+    are "→", so one path can mix both styles.
 
     Args:
         ix: Single interaction row dict
 
     Returns:
         Arrow chain string e.g.
-        "Fish Oil → [Drug-Drug Interaction via Supplement] → EPA → Warfarin"
-        "Fish Oil → [Direct Interaction] → Warfarin"
+        "Fish Oil → [Equivalent Active Ingredient] → contains -> <ingredient> -> equivalent to -> <drug> → <medication>"
+        "Fish Oil → [Direct Interaction] → directly interacts with -> Warfarin → Warfarin"
+        When detail is null: "<supplement> → [<pathway>] → <medication>"
     """
     supplement = ix.get('supplement', '?')
     target = ix.get('target', '?')
@@ -348,14 +362,19 @@ def synthesis_agent(state: Dict[str, Any]) -> Dict[str, Any]:
     LangGraph node: Generate the final answer from all specialist outputs.
 
     Reads from state:
-      - user_question, patient_profile, clean lists
+      - user_question and the clean lists (medications_list, supplements_list,
+        conditions_list, dietary_restrictions_list)
+      - normalized_medications, normalized_supplements (to flag unrecognized names)
+      - safety_checked, deficiency_checked, recommendations_checked
       - safety_results, deficiency_results, recommendation_results
-      - evidence_chain
+      - evidence_chain (appended to, not used as content)
 
     Writes to state:
       - final_answer
       - evidence_chain (append one synthesis step)
-      - error_message (only if synthesis fails completely)
+      - error_message (set to None on the LLM path and when falling back after an LLM failure;
+        never set to an error message here: an LLM failure is recorded only in evidence_chain.
+        The no-API-key path does not set it at all)
     """
     print("\n" + "=" * 60)
     print("🧾 SYNTHESIS: Generating final answer...")

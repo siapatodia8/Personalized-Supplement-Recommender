@@ -10,6 +10,11 @@ Identifies nutrient deficiency risks from three sources:
 Results from all three pathways are merged and cross-referenced.
 Nutrients at risk from multiple sources are flagged as critical overlaps.
 
+Scoring is deliberately simple: criticality is count-based (2+ sources on the same
+nutrient = critical overlap) and severity labels are carried along, not summed into
+a score. Earlier versions used hand-set confidence numbers and a risk_multiplier;
+both were dropped. How best to weigh severity is still to be decided.
+
 Reads from state : dietary_restrictions_list, medications_list, supplements_list
 Writes to state  : deficiency_checked, deficiency_results, evidence_chain
 """
@@ -24,6 +29,9 @@ logger = logging.getLogger(__name__)
 
 # ==================== CYPHER QUERIES ====================
 
+# STALE CODE (the ORDER BY at the end of this query): meant to sort HIGH, then MEDIUM, then
+# the rest. The graph stores mixed-case labels ('High', 'Moderate', 'Low to Moderate', ...),
+# so no row matches and rows sort by nutrient name only. Which nutrients are returned is unaffected.
 DIET_DEFICIENCY_QUERY = """
 MATCH (dr:DietaryRestriction)-[r:DEFICIENT_IN]->(n:Nutrient)
 WHERE toLower(dr.dietary_restriction_name) IN $restrictions_lower
@@ -62,6 +70,8 @@ RETURN s.supplement_name AS source,
        'supplement' AS source_type
 """
 
+# Turns the stored interaction verb into a risk label. Covers the six verbs in the data;
+# any other spelling falls back to MEDIUM (e.g. the one 'deletes' row: Ketorolac -> Vitamin C).
 INTERACTION_TYPE_RISK = {
     'depletes': 'HIGH',
     'antagonizes': 'HIGH',
@@ -71,6 +81,9 @@ INTERACTION_TYPE_RISK = {
     'redistributes': 'LOW',
 }
 
+# NOTE (known drift): keys are uppercase. Medication and supplement labels match them, but
+# diet labels from the graph are mixed-case ('High', 'Moderate', ...) and fall back to 3
+# (lowest) when _aggregate looks up the highest individual risk.
 RISK_ORDER = {'CRITICAL': 0, 'HIGH': 1, 'MEDIUM': 2, 'MODERATE': 2, 'LOW': 3}
 
 
@@ -79,7 +92,9 @@ def _check_diet(restrictions: List[str]) -> List[Dict[str, Any]]:
     Query for nutrient deficiencies from dietary restrictions.
 
     Args:
-        restrictions: dietary_restrictions_list from state
+        restrictions: dietary_restrictions_list from state. Plain text as extracted, not
+            matched to graph names first: each must equal a DietaryRestriction name
+            (Vegan, Vegetarian, Pescatarian, Keto, Gluten-Free, Dairy-Free), ignoring case.
 
     Returns:
         List of deficiency records with source_type='diet'
@@ -137,6 +152,8 @@ def _check_medications(medications: List[str]) -> List[Dict[str, Any]]:
 
     deficiencies = []
     for row in rows or []:
+        # NOTE: the query aliases r.interaction_type AS risk_level, so 'risk_level' here is the
+        # raw verb (e.g. 'depletes'); INTERACTION_TYPE_RISK turns it into the real risk label.
         interaction_type = row.get('risk_level', '')
         risk_level = INTERACTION_TYPE_RISK.get(interaction_type, 'MEDIUM')
 
@@ -207,6 +224,11 @@ def _aggregate(
     A critical overlap is when 2+ sources affect the same nutrient —
     the combined risk is higher than any single source alone.
 
+    Count-based on purpose: any overlap is labeled CRITICAL and severity is not summed.
+    overlap_type only records how many different source types are involved
+    (TRIPLE_OVERLAP = diet + medication + supplement, DOUBLE_OVERLAP = two types,
+    SINGLE_SOURCE_MULTIPLE = several records from one type).
+
     Args:
         diet_def: Diet pathway results
         med_def: Medication pathway results
@@ -251,6 +273,9 @@ def _aggregate(
             key=lambda s: RISK_ORDER.get(s['risk_level'], 3)
         )['risk_level']
 
+        # STALE CODE (the 'overlap_type', 'combined_risk' and 'highest_individual_risk' fields):
+        # meant to describe how severe an overlap is. Synthesis only reads 'nutrient' and
+        # 'warning'; the other fields only reach the supervisor as text in its prompt. Kept as is.
         critical_overlaps.append({
             'nutrient': nutrient,
             'sources': sources,
@@ -281,10 +306,17 @@ def _build_results(
     medications_checked: List[str],
     supplements_checked: List[str],
 ) -> Dict[str, Any]:
+    """
+    Package the pathway results, merged nutrients and overlaps into one results dict.
+
+    status is 'found' or 'not_found'; summary is a one-line description of the outcome.
+    """
 
     total = len(all_at_risk)
     critical_count = len(critical_overlaps)
 
+    # STALE CODE: meant to build the 'nothing_to_check' result; unused because
+    # deficiency_check() exits early and builds that dict itself when all three lists are empty.
     if not restrictions_checked and not medications_checked and not supplements_checked:
         status = 'nothing_to_check'
         summary = 'No dietary restrictions, medications, or supplements to analyze'
@@ -337,7 +369,8 @@ def deficiency_check(state: Dict[str, Any]) -> Dict[str, Any]:
 
     Writes to state:
         - deficiency_checked: True
-        - deficiency_results: compact structured summary
+        - deficiency_results: structured results (per-pathway findings, merged
+          nutrients at risk, critical overlaps, one-line summary)
         - evidence_chain: appended with deficiency finding
 
     Args:
@@ -399,7 +432,7 @@ def deficiency_check(state: Dict[str, Any]) -> Dict[str, Any]:
     print(f"\n   Aggregating and checking for critical overlaps...")
     all_at_risk, critical_overlaps = _aggregate(diet_def, med_def, supp_def)
 
-    # ── Build compact results ──
+    # ── Build results ──
     results = _build_results(
         diet_def, med_def, supp_def,
         all_at_risk, critical_overlaps,
